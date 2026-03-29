@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #121416;
+  --color-foreground: #e2e2e5;
+
+  /* Premium Surface Tiers */
+  --color-surface-lowest: #0c0e10;
+  --color-surface-low: #1a1c1e;
+  --color-surface-container: #1e2022;
+  --color-surface-high: #282a2c;
+  --color-surface-highest: #333537;
+  --color-surface-bright: #37393b;
+
+  /* Brand Accents */
+  --color-primary-emerald: #4edea3;
+  --color-secondary-gold: #e9c349;
+  --color-accent-tertiary: #b9c9d3;
+
+  /* Semantic Colors */
+  --color-on-primary: #003824;
+  --color-on-surface: #e2e2e5;
+  --color-on-surface-variant: #c4c7c7;
+
+  /* Radius */
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-full: 9999px;
+
+  /* Shadows - Ambient & Architectural */
+  --shadow-premium: 0 24px 48px rgba(0, 0, 0, 0.4);
+  --shadow-subtle: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+:root {
+  --background: #121416;
+  --foreground: #e2e2e5;
+  --primary: #4edea3;
+  --secondary: #e9c349;
+}
+
+/* Base Styles */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Architectural Utilities */
+@layer utilities {
+  .glass {
+    @apply bg-surface-bright/60 backdrop-blur-xl border-none;
+  }
+
+  .no-line {
+    border: none !important;
+  }
+
+  .tonal-recessed {
+    @apply bg-surface-lowest shadow-inner;
+  }
+
+  .tonal-raised {
+    @apply bg-surface-high shadow-premium;
+  }
+
+  .insights-card {
+    @apply bg-surface-container rounded-xl transition-all duration-300 ease-out hover:bg-surface-highest;
+  }
+
+  .liquid-gradient {
+    @apply bg-gradient-to-br from-primary-emerald to-primary-emerald/20;
+  }
+}
+
+/* Animations */
+@keyframes bloom {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-bloom {
+  animation: bloom 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
