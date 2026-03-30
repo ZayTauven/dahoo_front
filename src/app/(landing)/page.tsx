@@ -1,20 +1,19 @@
 "use client";
 
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  ArrowRight,
   Bath,
   BedDouble,
   Check,
   CircleArrowOutUpRight,
-  Globe,
   Heart,
-  MapPin,
-  Menu,
   Ruler,
-  SlidersHorizontal,
 } from "lucide-react";
+import { LandingHeader } from "@/components/ui/LandingHeader";
+import { SearchFilters } from "@/components/ui/SearchFilters";
+import { PropertyCard, Property } from "@/components/ui/PropertyCard";
 
 const cx = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(" ");
@@ -30,17 +29,6 @@ const styles = {
     "inline-flex items-center justify-center gap-2 rounded-full border border-black/10 bg-transparent px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-black/5 active:bg-black/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20",
   iconBtn:
     "inline-flex items-center justify-center rounded-full border border-black/10 bg-background p-2 text-on-surface-variant transition-colors hover:bg-black/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20",
-};
-
-type Property = {
-  id: number;
-  title: string;
-  city: string;
-  price: string;
-  beds: number;
-  baths: number;
-  area: string;
-  image: string;
 };
 
 const featuredProperties: Property[] = [
@@ -133,71 +121,45 @@ function Section({
 }
 
 export default function LandingPage() {
+  const [mode, setMode] = useState<"light" | "dark">("light");
+  const [activeTab, setActiveTab] = useState("Buy");
+  const [selectedType, setSelectedType] = useState("All");
+  const [lookingFor, setLookingFor] = useState("");
+  const [location, setLocation] = useState("");
+  const [price, setPrice] = useState("");
+  const [rooms, setRooms] = useState(3);
+  const [selectedBedroom, setSelectedBedroom] = useState("3");
+  const [longTerm, setLongTerm] = useState(true);
+  const [showOnMap, setShowOnMap] = useState(false);
+
+  const handleSearchSubmit = (event?: React.FormEvent<HTMLFormElement>) => {
+    if (event) event.preventDefault();
+    console.log({
+      mode,
+      activeTab,
+      selectedType,
+      lookingFor,
+      location,
+      price,
+      rooms,
+      longTerm,
+      showOnMap,
+    });
+  };
+
+  const toggleMode = () => {
+    setMode((current) => (current === "light" ? "dark" : "light"));
+  };
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-50 border-b border-black/5 bg-background/85 backdrop-blur-md">
-        <div
-          className={cx(
-            styles.container,
-            "flex h-16 items-center justify-between",
-          )}
-        >
-          <Link
-            href="/"
-            className="font-manrope text-lg font-semibold tracking-tight"
-          >
-            HOOMA
-          </Link>
-          <nav
-            aria-label="Navigation principale"
-            className="hidden items-center gap-2 rounded-full border border-black/10 bg-surface-lowest p-1 shadow-[0_1px_0_rgba(0,0,0,0.02)] md:flex"
-          >
-            <Link
-              href="#home"
-              className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background"
-            >
-              Home
-            </Link>
-            <Link
-              href="#featured"
-              className="rounded-full px-4 py-2 text-sm text-on-surface-variant transition-colors hover:text-foreground"
-            >
-              Properties
-            </Link>
-            <Link
-              href="#services"
-              className="rounded-full px-4 py-2 text-sm text-on-surface-variant transition-colors hover:text-foreground"
-            >
-              Services
-            </Link>
-            <Link
-              href="#about"
-              className="rounded-full px-4 py-2 text-sm text-on-surface-variant transition-colors hover:text-foreground"
-            >
-              About Us
-            </Link>
-            <button
-              type="button"
-              aria-label="Ouvrir le menu"
-              className="rounded-full p-2 text-on-surface-variant transition-colors hover:bg-black/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20"
-            >
-              <Menu size={16} />
-            </button>
-          </nav>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              aria-label="Changer la langue"
-              className={cx(styles.iconBtn, "hidden lg:inline-flex")}
-            >
-              <Globe size={16} />
-            </button>
-            <Link href="/dashboard" className={styles.btnPrimary}>
-              Sign In
-            </Link>
-          </div>
-        </div>
-      </header>
+    <div
+      className={
+        mode === "dark"
+          ? "min-h-screen bg-slate-950 text-background"
+          : "min-h-screen bg-background text-foreground"
+      }
+    >
+      <LandingHeader mode={mode} onToggleMode={toggleMode} />
 
       <main>
         <section id="home" className="py-12 lg:py-16">
@@ -256,7 +218,7 @@ export default function LandingPage() {
                     height={760}
                     priority
                     sizes="(max-width: 1024px) 100vw, 60vw"
-                    className="h-80 w-full object-cover lg:h-[420px]"
+                    className="h-80 w-full object-cover lg:h-105"
                   />
                   <div className="absolute right-4 top-4 rounded-2xl bg-surface-lowest px-4 py-3 shadow-subtle">
                     <p className="text-sm font-medium">4.8 (10k Reviews)</p>
@@ -297,68 +259,27 @@ export default function LandingPage() {
             </div>
 
             <div id="services" className={cx(styles.card, "mt-10 p-4 lg:p-5")}>
-              <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                <div className="grid gap-3 lg:grid-cols-4">
-                  {["Looking for", "Location", "Price", "Number of rooms"].map(
-                    (label) => (
-                      <label key={label} className="block">
-                        <span className="mb-2 block text-sm text-on-surface-variant">
-                          {label}
-                        </span>
-                        <div className="flex h-11 items-center rounded-xl border border-black/10 bg-background px-3 text-sm text-on-surface-variant shadow-[0_1px_0_rgba(0,0,0,0.02)]">
-                          <MapPin size={14} className="mr-2" />
-                          {label}
-                        </div>
-                      </label>
-                    ),
-                  )}
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  {["Buy", "Sell", "Rent"].map((tab, idx) => (
-                    <button
-                      type="button"
-                      key={tab}
-                      className={cx(
-                        "rounded-full px-4 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20",
-                        idx === 0
-                          ? "bg-foreground text-background"
-                          : "bg-surface-low text-on-surface-variant hover:bg-black/5",
-                      )}
-                    >
-                      {tab}
-                    </button>
-                  ))}
-                  <button type="button" className={cx(styles.btnGhost, "ml-2")}>
-                    <SlidersHorizontal size={14} /> Filter
-                  </button>
-                  {["All", "House", "Residential", "Apartment"].map(
-                    (chip, idx) => (
-                      <button
-                        type="button"
-                        key={chip}
-                        className={cx(
-                          "rounded-full px-4 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20",
-                          idx === 0
-                            ? "bg-foreground text-background"
-                            : "bg-surface-low text-on-surface-variant hover:bg-black/5",
-                        )}
-                      >
-                        {chip}
-                      </button>
-                    ),
-                  )}
-                  <button
-                    type="submit"
-                    className={cx(
-                      styles.btnPrimary,
-                      "ml-auto rounded-xl px-6 py-3",
-                    )}
-                  >
-                    Find Properties
-                  </button>
-                </div>
-              </form>
+              <SearchFilters
+                activeTab={activeTab as "Buy" | "Sell" | "Rent"}
+                setActiveTab={(value) => setActiveTab(value)}
+                selectedType={
+                  selectedType as "All" | "House" | "Residential" | "Apartment"
+                }
+                setSelectedType={(value) => setSelectedType(value)}
+                lookingFor={lookingFor}
+                setLookingFor={(value) => setLookingFor(value)}
+                location={location}
+                setLocation={(value) => setLocation(value)}
+                price={price}
+                setPrice={(value) => setPrice(value)}
+                rooms={rooms}
+                setRooms={(value) => setRooms(value)}
+                longTerm={longTerm}
+                setLongTerm={(value) => setLongTerm(value)}
+                showOnMap={showOnMap}
+                setShowOnMap={(value) => setShowOnMap(value)}
+                onSearch={handleSearchSubmit}
+              />
             </div>
           </div>
         </section>
@@ -376,16 +297,37 @@ export default function LandingPage() {
           <div className="grid gap-5 lg:grid-cols-[260px_1fr]">
             <aside className={cx(styles.cardMuted, "rounded-2xl p-4")}>
               <div className="mb-4 flex items-center justify-between text-sm">
-                <p>256 Results</p>
-                <p>Show On Map</p>
+                <p>{showOnMap ? "256 Results (Map mode)" : "256 Results"}</p>
+                <button
+                  type="button"
+                  onClick={() => setShowOnMap((current) => !current)}
+                  className={cx(
+                    "rounded-full px-2 py-1 text-xs font-medium transition hover:bg-black/5",
+                    showOnMap
+                      ? "bg-foreground text-background"
+                      : "bg-surface-low text-on-surface-variant",
+                  )}
+                >
+                  {showOnMap ? "Hide Map" : "Show On Map"}
+                </button>
               </div>
               <p className="mb-2 text-sm font-medium">Rental Period</p>
               <div className="space-y-2 text-sm text-on-surface-variant">
                 <label className="flex items-center gap-2">
-                  <input type="checkbox" defaultChecked /> Long term rent
+                  <input
+                    type="checkbox"
+                    checked={longTerm}
+                    onChange={() => setLongTerm((v) => !v)}
+                  />
+                  Long term rent
                 </label>
                 <label className="flex items-center gap-2">
-                  <input type="checkbox" /> Short term rent
+                  <input
+                    type="checkbox"
+                    checked={!longTerm}
+                    onChange={() => setLongTerm((v) => !v)}
+                  />
+                  Short term rent
                 </label>
               </div>
               <p className="mb-2 mt-5 text-sm font-medium">Bedrooms</p>
@@ -394,7 +336,13 @@ export default function LandingPage() {
                   <button
                     type="button"
                     key={b}
-                    className={cx(styles.pill, "px-3 py-1.5 text-xs")}
+                    onClick={() => setSelectedBedroom(b)}
+                    className={cx(
+                      "px-3 py-1.5 text-xs rounded-full border transition-all",
+                      selectedBedroom === b
+                        ? "bg-foreground text-background border-transparent"
+                        : "bg-background text-on-surface-variant border-black/10 hover:bg-black/5",
+                    )}
                   >
                     {b}
                   </button>
@@ -498,45 +446,11 @@ export default function LandingPage() {
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {featuredProperties.map((property, idx) => (
-                  <article
+                  <PropertyCard
                     key={property.id}
-                    className={cx(
-                      "overflow-hidden rounded-3xl border border-black/10 transition-transform duration-200 hover:-translate-y-0.5",
-                      idx === 1 ? "bg-black text-white" : "bg-surface-lowest",
-                    )}
-                  >
-                    <Image
-                      src={property.image}
-                      alt={property.title}
-                      width={720}
-                      height={480}
-                      sizes="(max-width: 1280px) 50vw, 30vw"
-                      className="h-48 w-full object-cover"
-                    />
-                    <div className="p-4">
-                      <h3 className="text-2xl font-medium">{property.title}</h3>
-                      <p
-                        className={`mt-2 text-sm ${idx === 1 ? "text-white/70" : "text-on-surface-variant"}`}
-                      >
-                        A spacious home with three cozy bedrooms and two
-                        bathrooms, ideal for family.
-                      </p>
-                      <div className="mt-4 flex items-center justify-between text-sm">
-                        <span>{property.price}</span>
-                        <button
-                          type="button"
-                          className={cx(
-                            styles.btnGhost,
-                            "px-3 py-1.5",
-                            idx === 1 &&
-                              "border-white/20 bg-white text-black hover:bg-white/90",
-                          )}
-                        >
-                          Book Now <ArrowRight size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  </article>
+                    property={property}
+                    highlight={idx === 1}
+                  />
                 ))}
               </div>
             </div>
@@ -688,7 +602,7 @@ export default function LandingPage() {
                 width={1600}
                 height={800}
                 sizes="100vw"
-                className="h-[380px] w-full object-cover"
+                className="h-95 w-full object-cover"
               />
               <div className="absolute inset-0 bg-black/25" />
               <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center text-white">
