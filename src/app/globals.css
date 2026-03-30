@@ -76,6 +76,14 @@ body {
   .liquid-gradient {
     @apply bg-gradient-to-br from-primary-emerald to-primary-emerald/20;
   }
+
+  .font-manrope {
+    font-family: var(--font-manrope);
+  }
+
+  .font-inter {
+    font-family: var(--font-inter);
+  }
 }
 
 /* Animations */

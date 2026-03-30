@@ -12,23 +12,45 @@ import {
   Settings,
   CreditCard,
   MessageSquare,
-  Home
+  Home,
+  UserPlus,
+  Key,
+  Zap,
+  ShieldAlert,
+  ScanFace,
+  Contact,
+  Briefcase,
+  FolderArchive,
+  Globe,
+  FileBarChart,
+  Waves,
+  Compass
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/" },
   { icon: Building2, label: "Properties", href: "/properties" },
+  { icon: Contact, label: "Residents & Leases", href: "/residents" },
+  { icon: FileBarChart, label: "Strategic Reports", href: "/reports" },
+  { icon: Waves, label: "Luxury Amenities", href: "/services" },
+  { icon: Compass, label: "Public Showroom", href: "/portfolio" },
+  { icon: MessageSquare, label: "Concierge Chat", href: "/messages" },
+  { icon: FolderArchive, label: "Asset Vault", href: "/documents" },
   { icon: BarChart3, label: "Analytics", href: "/analytics" },
   { icon: CreditCard, label: "Financials", href: "/financials" },
   { icon: Users, label: "CRM Pipeline", href: "/crm" },
   { icon: Layers, label: "Maintenance", href: "/maintenance" },
   { icon: Home, label: "Smart House", href: "/smart-house" },
-  { icon: MessageSquare, label: "Community", href: "/community" },
+  { icon: Globe, label: "Community", href: "/community" },
   { icon: Bell, label: "Notifications", href: "/notifications" },
   { icon: ShieldCheck, label: "Security", href: "/security" },
+  { icon: Briefcase, label: "Staff & Security", href: "/users" },
+  { icon: Key, label: "Roles & Permissions", href: "/roles" },
+  { icon: Zap, label: "SaaS Subscription", href: "/subscription" },
+  { icon: ScanFace, label: "Field Operations", href: "/field" },
 ];
 
 export const Sidebar = () => {

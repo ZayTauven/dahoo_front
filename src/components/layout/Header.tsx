@@ -1,57 +1,90 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { usePathname } from "next/navigation";
 import { 
-  Bell, 
   Search, 
-  Plus, 
-  HelpCircle,
-  Maximize,
-  LayoutGrid
+  Bell, 
+  Settings, 
+  Menu,
+  ChevronDown
 } from "lucide-react";
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 
-export const Header = () => {
+export function Header() {
+  const pathname = usePathname();
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Format pathname to title (e.g. /smart-house -> Smart House)
+  const pageTitle = pathname === "/" 
+    ? "Dashboard Overview" 
+    : pathname.split("/").filter(Boolean)[0]
+        .split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "/" && (e.target as HTMLElement).tagName !== "INPUT") {
+        e.preventDefault();
+        document.getElementById("global-search")?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   return (
-    <header className="h-20 bg-background/60 backdrop-blur-md flex items-center px-8 sticky top-0 z-40 no-line bg-opacity-80">
-      <div className="flex-1 flex items-center gap-4">
-        <div className="relative group w-96">
-          <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary-emerald transition-colors" />
-          <input 
-            type="text" 
-            placeholder="Search properties, leads, or analytics..."
-            className="w-full bg-surface-low border-none rounded-lg pl-12 pr-4 py-2.5 text-sm font-inter text-foreground placeholder:text-on-surface-variant focus:ring-1 focus:ring-primary-emerald/50 transition-all bg-opacity-50 hover:bg-opacity-80 focus:bg-surface-container"
-          />
-        </div>
+    <header className="h-20 flex items-center justify-between px-10 border-b border-white/5 bg-background/50 backdrop-blur-xl sticky top-0 z-40 transition-all duration-500">
+      <div className="flex items-center gap-4">
+        <button className="lg:hidden p-2 rounded-lg bg-surface-lowest text-on-surface-variant">
+          <Menu size={20} />
+        </button>
+        <h2 className="text-sm font-manrope font-extrabold uppercase tracking-[0.3em] text-on-surface-variant flex items-center gap-2">
+           <div className="w-1 h-1 rounded-full bg-primary-emerald shadow-[0_0_8px_rgba(78,222,163,0.8)]" />
+           {pageTitle}
+        </h2>
       </div>
 
-      <div className="flex items-center gap-6">
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-surface-lowest rounded-lg border-2 border-primary-emerald/10 cursor-pointer hover:bg-surface-low transition-colors group">
-          <div className="w-2 h-2 rounded-full bg-primary-emerald" />
-          <span className="text-xs font-manrope font-bold text-on-surface uppercase tracking-wide">
-            Garden Residence
-          </span>
-          <LayoutGrid className="w-3.5 h-3.5 text-on-surface-variant group-hover:text-primary-emerald" />
+      <div className="flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-3 bg-surface-lowest rounded-xl px-4 py-2.5 w-80 group border border-white/5 focus-within:border-primary-emerald/30 focus-within:w-96 transition-all duration-500">
+          <Search size={18} className="text-on-surface-variant group-focus-within:text-primary-emerald transition-colors" />
+          <input 
+            id="global-search"
+            type="text" 
+            placeholder="Search everything..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="bg-transparent border-none outline-none text-xs font-bold w-full placeholder:text-on-surface-variant/40"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                console.log("Global search for:", searchQuery);
+                // Placeholder for global search logic
+              }
+            }}
+          />
+          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-surface-container border border-white/10 opacity-40 group-focus-within:opacity-0 transition-opacity">
+            <span className="text-[8px] font-extrabold text-on-surface-variant">/</span>
+          </div>
         </div>
 
-        <button className="flex items-center gap-2 bg-primary-emerald text-on-primary px-4 py-2.5 rounded-lg font-manrope font-bold text-xs uppercase tracking-widest shadow-premium hover:shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]">
-          <Plus className="w-4 h-4" />
-          Quick Action
-        </button>
-
-        <div className="h-8 w-[1px] bg-surface-high opacity-50" />
-
-        <div className="flex items-center gap-4">
-          <div className="relative p-2 rounded-lg bg-surface-low text-on-surface-variant hover:text-foreground hover:bg-surface-container cursor-pointer transition-all group">
-            <Bell className="w-5 h-5" />
-            <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-primary-emerald border-2 border-background rounded-full animate-bloom" />
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 p-1 bg-surface-lowest rounded-xl border border-white/5">
+            <button className="relative p-2 rounded-lg text-on-surface-variant hover:text-foreground hover:bg-surface-container transition-all">
+              <Bell size={18} />
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-primary-emerald rounded-full border-2 border-surface-lowest" />
+            </button>
+            <button className="p-2 rounded-lg text-on-surface-variant hover:text-foreground hover:bg-surface-container transition-all">
+              <Settings size={18} />
+            </button>
           </div>
-          <div className="p-2 rounded-lg bg-surface-low text-on-surface-variant hover:text-foreground hover:bg-surface-container cursor-pointer transition-all">
-            <Maximize className="w-5 h-5" />
-          </div>
-          <div className="p-2 rounded-lg bg-surface-low text-on-surface-variant hover:text-foreground hover:bg-surface-container cursor-pointer transition-all">
-            <HelpCircle className="w-5 h-5" />
-          </div>
+          
+          <div className="h-8 w-px bg-white/5 mx-2" />
+          
+          <button className="flex items-center gap-3 p-1.5 pr-3 rounded-xl hover:bg-surface-lowest transition-all border border-transparent hover:border-white/5 group">
+             <div className="w-8 h-8 rounded-lg bg-linear-to-br from-primary-emerald to-emerald-700 flex items-center justify-center font-extrabold text-[10px] text-surface-container shadow-lg shadow-primary-emerald/10 group-hover:scale-105 transition-transform">
+                MJ
+             </div>
+             <ChevronDown size={14} className="text-on-surface-variant group-hover:text-foreground transition-colors" />
+          </button>
         </div>
       </div>
     </header>
