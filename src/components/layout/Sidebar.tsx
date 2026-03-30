@@ -31,7 +31,7 @@ import { usePathname } from "next/navigation";
 import React from "react";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: Building2, label: "Properties", href: "/properties" },
   { icon: Contact, label: "Residents & Leases", href: "/residents" },
   { icon: FileBarChart, label: "Strategic Reports", href: "/reports" },

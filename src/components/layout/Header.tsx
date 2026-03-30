@@ -6,12 +6,16 @@ import {
   Bell, 
   Settings, 
   Menu,
-  ChevronDown
+  ChevronDown,
+  Sun,
+  Moon
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 
 export function Header() {
+  const { theme, setTheme } = useTheme();
   const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState("");
   
@@ -71,6 +75,12 @@ export function Header() {
             <button className="relative p-2 rounded-lg text-on-surface-variant hover:text-foreground hover:bg-surface-container transition-all">
               <Bell size={18} />
               <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-primary-emerald rounded-full border-2 border-surface-lowest" />
+            </button>
+            <button 
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="p-2 rounded-lg text-on-surface-variant hover:text-foreground hover:bg-surface-container transition-all"
+            >
+              {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             <button className="p-2 rounded-lg text-on-surface-variant hover:text-foreground hover:bg-surface-container transition-all">
               <Settings size={18} />

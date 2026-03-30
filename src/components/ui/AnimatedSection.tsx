@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, cubicBezier } from "framer-motion";
 import React from "react";
 
 interface AnimatedSectionProps {
@@ -31,7 +31,7 @@ export const AnimatedSection = ({
       transition: {
         duration: 0.8,
         delay,
-        ease: [0.25, 0.46, 0.45, 0.94],
+        ease: cubicBezier(0.25, 0.46, 0.45, 0.94),
       },
     },
   };
