@@ -1,5 +1,23 @@
-node_modules
-dist
-.next
-.env
+# Dépendances
+/node_modules
+/.pnp
+.pnp.*
 
+# Next.js / build
+/.next/
+/out/
+/build
+/dist
+*.tsbuildinfo
+next-env.d.ts
+
+# Environnement / secrets
+.env
+.env.*
+!.env.example
+
+# Divers
+.DS_Store
+*.pem
+npm-debug.log*
+.vercel
