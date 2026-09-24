@@ -1,4 +1,6 @@
+import { IconChevronRight } from "@tabler/icons-react";
 import Link from "next/link";
+import { Fragment } from "react";
 import type { ReactNode } from "react";
 
 export interface Crumb {
@@ -26,13 +28,20 @@ export function PageHead({
             <nav className="ax-breadcrumb" aria-label="Fil d'Ariane">
               <ol className="ax-breadcrumb__list">
                 {crumbs.map((crumb, index) => (
-                  <li key={`${crumb.label}-${index}`} className="ax-breadcrumb__item">
-                    {crumb.href && index < crumbs.length - 1 ? (
-                      <Link href={crumb.href}>{crumb.label}</Link>
-                    ) : (
-                      <span aria-current={index === crumbs.length - 1 ? "page" : undefined}>{crumb.label}</span>
+                  <Fragment key={`${crumb.label}-${index}`}>
+                    {index > 0 && (
+                      <li className="ax-breadcrumb__sep" aria-hidden="true">
+                        <IconChevronRight stroke={1.75} />
+                      </li>
                     )}
-                  </li>
+                    <li className="ax-breadcrumb__item">
+                      {crumb.href && index < crumbs.length - 1 ? (
+                        <Link href={crumb.href}>{crumb.label}</Link>
+                      ) : (
+                        <span aria-current={index === crumbs.length - 1 ? "page" : undefined}>{crumb.label}</span>
+                      )}
+                    </li>
+                  </Fragment>
                 ))}
               </ol>
             </nav>

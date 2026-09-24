@@ -1,78 +1,130 @@
 # Refonte du front Dahoo
 
 Document de référence de la refonte : décisions d'architecture, conventions et découpage du travail.
-Toute personne (ou agent) qui contribue à la refonte le lit avant d'écrire du code.
+Toute personne (ou agent) qui contribue à la refonte le lit **entièrement** avant d'écrire du code.
 
 ## 1. Décisions
 
 | Sujet | Décision | Pourquoi |
 | --- | --- | --- |
 | Nombre d'applications | **Une seule app Next.js** (ce dépôt), découpée en groupes de routes | Une charte, un client API, une authentification et un déploiement. Le site public et l'espace agence partagent le design system. |
-| Base technique | **Vireo** (Next + React 19 + Tailwind 4, tokens `--ax-*`), porté en Next 16 | Déjà en composants React, avec un design system à tokens, un shell, le thème clair/sombre et des graphiques. |
-| Site public | **Réécriture** des pages immobilier de **Crafto** en React + Tailwind sur les tokens Dahoo | On n'importe **ni** le CSS de Crafto (≈ 1,5 Mo, Bootstrap), **ni** jQuery : il entrerait en conflit avec le dashboard et plomberait les performances. Crafto sert de **référence visuelle**. |
-| Comportements Crafto | Swiper (`swiper/react`) pour les carrousels, `motion` pour les animations (`data-anime`), Leaflet pour les cartes | Remplace `main.js`, `vendors.min.js` et jQuery. |
-| Authentification | **Backend-for-frontend** : jetons JWT en cookies `httpOnly`, relais Next `/api/backend/*` vers Django, `proxy.ts` pour les redirections | Aucun jeton accessible au JavaScript (XSS), une seule origine (pas de CORS en production). Conforme au guide Next 16 `backend-for-frontend`. |
-| Données | Site public : Server Components qui interrogent Django directement (SEO, mise en cache). Espace agence : React Query côté client, via le relais | Référencement pour les annonces, interactivité pour la gestion. |
-| Types | Générés depuis le schéma OpenAPI du backend (`openapi-typescript`) | Le front et l'API restent synchronisés ; toute rupture de contrat casse la compilation. |
-| Langue et devise | Français, FCFA (`Intl.NumberFormat('fr-FR', { currency: 'XOF' })`) | Marché cible. La structure permet d'ajouter d'autres langues plus tard. |
+| Base technique | **Vireo** (React 19 + Tailwind 4, tokens `--ax-*`), porté en **Next 16** | Déjà en composants React, avec un design system à tokens, un shell, le thème clair/sombre et des graphiques. |
+| Site public | **Réécriture** des pages immobilier de **Crafto** en React + Tailwind sur les tokens Dahoo | On n'importe **ni** le CSS de Crafto (≈ 1,5 Mo, Bootstrap), **ni** jQuery. Crafto sert de **référence visuelle**. |
+| Comportements Crafto | `swiper/react` pour les carrousels, `motion/react` pour les animations (`data-anime`), cartes à venir | Remplace `main.js`, `vendors.min.js` et jQuery. |
+| Authentification | **Backend-for-frontend** : jetons JWT en cookies `httpOnly`, relais Next `/api/backend/*` vers Django, `src/proxy.ts` pour les redirections | Aucun jeton accessible au JavaScript, une seule origine. Guide Next 16 `backend-for-frontend`. |
+| Données | Site public : Server Components + `publicApi` (cache 60 s). Espace agence : React Query + `api` (relais) | Référencement pour les annonces, interactivité pour la gestion. |
+| Types | Générés depuis l'OpenAPI du backend : `npm run api:types` (API lancée sur :8000) | Toute rupture de contrat casse la compilation. |
+| Langue et devise | Français, FCFA (`formatMoney` dans `src/lib/format.ts`) | Marché cible. |
 
 ## 2. Charte Dahoo
 
-Couleurs tirées du logo (`public/Logo/`) :
+- **Orange `#F7941D`** = accent (`bg-accent`, `text-accent-text` pour du texte orange lisible). **Le texte sur fond orange est indigo foncé** (`text-on-accent`), jamais blanc (contraste AA).
+- **Indigo `#283891`** = marque (`bg-brand`, `text-brand`, rampes `brand-50…900`). Liens : `text-link`.
+- Polices : `font-display` (Urbanist) pour les titres, Inter par défaut, `ax-num` / `font-mono` pour les chiffres.
+- Couleurs de surface et de texte : `bg-canvas`, `bg-surface`, `bg-surface-subtle`, `bg-surface-solid`, `text-text-strong`, `text-text`, `text-text-muted`, `text-text-subtle`, `border-border-default`.
+- **Aucune couleur en dur** (`#…`, `bg-blue-600`…) : uniquement les utilitaires ci-dessus ou `var(--ax-…)`. Thèmes clair et sombre doivent rester lisibles.
+- Logo : `/brand/logo.png` (couleur), `/brand/logo-white.png` (sur fond sombre), `/brand/mark.png` (symbole seul).
 
-| Rôle | Couleur | Usage |
-| --- | --- | --- |
-| Accent (primaire) | Orange `#F7941D` | Actions principales, liens, focus, mise en avant |
-| Marque (secondaire) | Indigo `#283891` | Titres forts, en-têtes, sidebar, pied de page du site |
-
-- Polices : **Urbanist** pour les titres (géométrique, proche du logo) et **Inter** pour le texte et l'interface.
-- Tokens : preset d'accent `dahoo` dans `src/styles/tokens/_accents.css` (rampe 50→900 dérivée de l'orange), plus `--ax-brand-*` pour l'indigo. **Aucune couleur en dur dans les composants** : on passe par les tokens (`var(--ax-…)`) ou par les utilitaires Tailwind qui y sont reliés.
-- Thème clair et sombre conservés. Le personnaliseur de Vireo (12 accents, RTL, dispositions) est retiré : la charte est fixe.
-
-## 3. Organisation des routes
+## 3. Routes
 
 ```
 src/app/
-  (site)/            Site public : portail d'annonces + vitrine SaaS (header/footer marketing)
-    page.tsx                 Accueil
-    louer/  acheter/         Listes d'annonces filtrables
-    biens/[id]/              Fiche d'un bien + demande de visite
-    agences/ agences/[id]/   Agences partenaires
-    pour-les-agences/        Offre Dahoo (fonctionnalités)
-    tarifs/                  Plans d'abonnement
-    a-propos/  contact/
-  (auth)/            Connexion, mot de passe oublié
-  (app)/             Espace agence (shell Vireo, protégé)
-    tableau-de-bord/ biens/ locataires/ baux/ paiements/ maintenance/
-    annonces/ equipe/ organisation/
-    plateforme/      Espace admin Dahoo (réservé au staff)
-  api/
-    auth/            login / logout / refresh (pose et efface les cookies)
-    backend/[...path]  Relais authentifié vers l'API Django
+  (site)/                     Site public (en-tête + pied de page du site)
+    page.tsx                  Accueil
+    louer/  acheter/          Listes d'annonces filtrables
+    annonces/[id]/            Fiche d'une annonce + demande de visite
+    agences/  agences/[id]/   Agences partenaires
+    pour-les-agences/         Offre Dahoo + formulaire de démo (ancre #demo)
+    tarifs/  a-propos/  contact/
+  (auth)/connexion/           Connexion
+  (app)/                      Espace connecté (shell Vireo, protégé par src/proxy.ts)
+    espace/                   Tableau de bord de l'agence
+    espace/biens | locataires | baux | echeances | paiements | maintenance | annonces | equipe | agence
+    plateforme/agences | demandes   Espace admin Dahoo (staff)
+  api/auth/*                  Connexion / déconnexion (cookies)
+  api/backend/[...path]       Relais authentifié vers Django
 ```
 
-## 4. Conventions de code
+## 4. Guide du contributeur
 
-- Composants partagés : `src/components/site/*` (site public), `src/components/app/*` (espace agence), `src/components/ui/*` (communs).
-- Pas de `any`. Les types de l'API viennent de `src/lib/api/schema.d.ts` (généré).
-- Server Components par défaut ; `'use client'` uniquement quand il faut de l'état, des effets ou des gestionnaires d'événements.
-- Images : `next/image`, fichiers dans `public/images/site/…` (issus de `Assets/` et de Crafto).
-- Accessibilité : contrastes AA, focus visible, libellés ARIA sur les icônes seules, navigation au clavier.
-- Textes en français, sans lorem ipsum : un contenu provisoire doit rester plausible pour Dahoo.
-- Toute page livrée passe `tsc`, `eslint` et `next build`.
+### 4.1 Accès aux données
+
+**Espace agence** (composants client) — modèle : `src/app/(app)/espace/locataires/TenantsScreen.tsx`.
+```ts
+const list = useListParams(["status"] as const);           // page, recherche, filtres dans l'URL
+const query = useQuery({
+  queryKey: ["tickets", list.query],
+  queryFn: async () => unwrap(await api.GET("/api/v1/maintenance/tickets/", { params: { query: list.query } })),
+  placeholderData: keepPreviousData,
+});
+const save = useApiMutation({ mutationFn: …, invalidate: [["tickets"]], success: "Ticket créé.", onSuccess: close });
+```
+- `api` (`src/lib/api/client.ts`) : client typé, passe par le relais. `unwrap` lève une `ApiError` (`.message`, `.fields`).
+- Clés React Query : premier élément = nom de la ressource (`["tenants"]`, `["leases"]`…), pour que `invalidate` rafraîchisse toutes les pages de la liste.
+- Types : `Schema<"Tenant">` (lecture), `Schema<"TenantRequest">` (écriture) — `src/lib/api/types.ts`.
+- Droits : `const { can, isReadOnly } = useSession()`. Masquer une action si `!can("lease.activate")` ou si `isReadOnly` (essai expiré). L'API reste seule juge.
+
+**Site public** (Server Components) :
+```ts
+import { publicApi } from "@/lib/api/server";
+const { data } = await publicApi.GET("/api/v1/public/listings/", { params: { query: { listing_type: "RENT" } } });
+```
+- Cache de 60 s déjà configuré. `searchParams` et `params` sont des **Promises** en Next 16 (`await props.searchParams`).
+- Formulaires publics (demande de visite, demande de démo) : **Server Action** qui appelle Django via `publicApi.POST(…)` en ajoutant les en-têtes `forwardingHeaders(await headers())` (`src/lib/server/forwarding.ts`) pour la limitation de débit par visiteur.
+- Images de l'API : `next/image` accepte `http://localhost:8000/media/**` (voir `next.config.ts`).
+
+### 4.2 Composants disponibles
+
+Espace agence (`src/components/app/`) :
+
+| Composant | Rôle |
+| --- | --- |
+| `shell/PageHead` | Titre de page, sous-titre, fil d'Ariane (`crumbs`), actions |
+| `ui/DataTable` + `Column<T>` | Tableau paginé : chargement, erreur (+ réessayer), vide, lignes cliquables (`rowHref`) |
+| `ui/ListToolbar` | Recherche différée + emplacement filtres + actions |
+| `ui/Modal`, `ui/FormModal`, `ui/ConfirmDialog` | Modales accessibles (focus piégé, Échap) |
+| `ui/fields` | `TextField`, `TextareaField`, `SelectField`, `CheckboxField` (libellé, aide, erreur liés) |
+| `ui/StatusBadge` | Pastille de statut à partir des énumérations de `src/lib/labels.ts` |
+| `ui/Toast` | `useToast()` — notifications (déjà utilisé par `useApiMutation`) |
+| `EmptyState`, `KpiCard`, `charts/ApexChart` | État vide, indicateur, graphiques |
+
+Classes Vireo utilisables directement : `ax-card` / `ax-card__body` / `ax-card__header`, `ax-btn` (+ `--primary`, `--secondary`, `--ghost`, `--danger`, `--sm`, `--icon`), `ax-badge`, `ax-alert`, `ax-tabs`, `ax-list`, `ax-timeline`, `ax-progress`, `ax-skeleton`. Catalogue complet : sections numérotées de `src/styles/components.css`.
+
+Site public (`src/components/site/`) : `Container`, `Section` (`tone="subtle" | "brand"`), `SectionHeading` (sur-titre, titre, intro), `Highlight` (mot souligné animé), `Reveal` (apparition au défilement), `PropertyCard` + `listingPrice`.
+
+Communs : `src/lib/format.ts` (`formatMoney`, `formatDate`, `formatNumber`, `daysUntil`), `src/lib/labels.ts` (libellés FR des énumérations), `cn()` dans `src/lib/utils.ts`.
+
+### 4.3 Règles
+
+- **Server Components par défaut**, `"use client"` seulement si nécessaire (état, effets, événements).
+- **Pas de `any`**, pas de `// @ts-ignore`. Les types viennent du schéma.
+- **Mise en page en utilitaires Tailwind** reliés aux tokens ; pas de styles en ligne sauf valeur calculée ; pas de nouveau fichier CSS global.
+- **Accessibilité** : un seul `<h1>` par page, hiérarchie de titres respectée, libellés ARIA sur les boutons icône, états `aria-busy` / `aria-current`, contraste AA en clair et en sombre, navigation au clavier.
+- **Textes en français**, crédibles pour le Sénégal (quartiers, prix en FCFA), sans lorem ipsum. Pas de faux témoignages attribués à de vraies personnes ou entreprises.
+- **Responsive** : mobile (390 px) d'abord, puis tablette et bureau.
+- **Métadonnées** : chaque page exporte `metadata` ou `generateMetadata` (titre, description ; `robots: noindex` dans l'espace connecté).
+- Nouvelle dépendance npm : uniquement si indispensable, à justifier dans le compte rendu.
+
+### 4.4 Travail en parallèle (agents)
+
+- Chacun ne modifie **que les fichiers de son périmètre** (ses dossiers de routes, plus un dossier privé `_components/` à l'intérieur). Les fichiers partagés (`src/components/**`, `src/lib/**`, `src/styles/**`, `navigation.ts`, `package.json`) ne se modifient pas : un besoin partagé se signale dans le compte rendu.
+- Vérifications avant de rendre : `npx tsc --noEmit` (sans erreur dans ses fichiers) et `npx eslint <ses dossiers>` (sans erreur).
+- **Ne pas lancer** `next build`, `next dev` ni `next start` (serveur partagé, cache `.next` commun) : la recette visuelle est faite par l'orchestrateur.
+- L'API tourne sur `http://127.0.0.1:8000` (documentation : `/api/docs/`) : l'interroger avec `curl` pour voir les données réelles. Données de démonstration : `python manage.py seed_demo` (déjà exécutée).
 
 ## 5. Phases
 
-| Phase | Contenu | Qui |
+| Phase | Contenu | État |
 | --- | --- | --- |
-| **P0 Fondations** | Socle Vireo porté en Next 16, charte Dahoo, layouts des 3 groupes, composants partagés, authentification BFF, client API typé | Orchestrateur |
-| **P1 Backend public** | API publique des annonces (liste filtrable, fiche), photos des annonces, caractéristiques des lots (chambres, salles de bain…), profil public d'agence, plans publics, demande de démo | Orchestrateur ou agent |
-| **P2 Site public** | Conversion des pages Crafto (une page par agent), branchement sur l'API publique | Agents en parallèle |
-| **P3 Espace agence** | Un module par agent : biens, locataires, baux, paiements, maintenance, annonces, équipe, organisation | Agents en parallèle |
-| **P4 Plateforme** | Écrans admin Dahoo : agences, essais, abonnements | Agent |
-| **P5 Recette** | Parcours complets, responsive, accessibilité, performances, SEO | Orchestrateur |
+| **P0 Fondations** | Socle Vireo en Next 16, charte, layouts, authentification BFF, client API, kit d'interface, module de référence Locataires | Fait |
+| **P1 Backend public** | API publique (annonces, agences, stats, tarifs, démo), photos, filtres et libellés, limitation de débit derrière le front | Fait (branche `feat/api-publique`) |
+| **P2 Site public** | Conversion des pages Crafto, branchement sur l'API publique | En cours |
+| **P3 Espace agence** | Un module par agent | En cours |
+| **P4 Plateforme** | Écrans admin Dahoo | En cours |
+| **P5 Recette** | Parcours complets, responsive, accessibilité, performances, SEO | À faire |
 
 ## 6. Points d'attention
 
 - **Licences Envato.** Crafto et Vireo sont sous licence *Regular*. Pour un SaaS dont les utilisateurs paient l'accès, Envato exige en principe une licence *Extended* : à vérifier avant la mise en production.
-- **Poids des images.** Les visuels de Crafto et de `Assets/` doivent être optimisés (WebP/AVIF, dimensions réelles) avant d'être versionnés.
+- **Médias en production.** Les photos sont servies par Django uniquement en `DEBUG` : prévoir Nginx ou un stockage objet.
+- **IP des visiteurs.** En production, le reverse proxy doit écraser `X-Real-IP` (`proxy_set_header X-Real-IP $remote_addr;`) et `DAHOO_PROXY_KEY` (front) doit égaler `INTERNAL_PROXY_KEY` (API).

@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 
+import { ToastProvider } from "@/components/app/ui/Toast";
 import { useTheme } from "@/components/providers/ThemeProvider";
 
 import { AccessBanner } from "./AccessBanner";
@@ -53,7 +54,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [drawerOpen, closeDrawer]);
 
   return (
-    <>
+    <ToastProvider>
       <div className="ax-ambient" aria-hidden="true">
         <i />
       </div>
@@ -71,6 +72,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           </main>
         </div>
       </div>
-    </>
+    </ToastProvider>
   );
 }

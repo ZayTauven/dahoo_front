@@ -1992,16 +1992,23 @@ export interface components {
          * @enum {string}
          */
         AccessStatusEnum: "ACTIVE" | "TRIAL" | "EXPIRED";
-        AllocationInput: {
+        AllocationInputRequest: {
             schedule: number;
             /** Format: decimal */
             amount: string;
         };
-        AllocationRequest: {
-            allocations: components["schemas"]["AllocationInput"][];
+        AllocationRequestRequest: {
+            allocations: components["schemas"]["AllocationInputRequest"][];
         };
         AutomationRule: {
             readonly id: number;
+            event: components["schemas"]["EventEnum"];
+            active?: boolean;
+            delay_minutes?: number;
+            channel: string;
+            template: number;
+        };
+        AutomationRuleRequest: {
             event: components["schemas"]["EventEnum"];
             active?: boolean;
             delay_minutes?: number;
@@ -2036,6 +2043,9 @@ export interface components {
             incidents_count: number;
             /** Format: date-time */
             readonly created_at: string;
+        };
+        BuildingRequest: {
+            name: string;
         };
         Capability: {
             readonly id: number;
@@ -2079,6 +2089,16 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
         };
+        DemoRequestRequest: {
+            agency_name: string;
+            contact_name: string;
+            phone: string;
+            email?: string;
+            city?: string;
+            /** Nombre de lots gérés */
+            units_range: components["schemas"]["UnitsRangeEnum"];
+            message?: string;
+        };
         /**
          * @description * `LEASE_CREATED` - Contrat créé
          *     * `RENT_DUE` - Loyer à échéance
@@ -2109,6 +2129,14 @@ export interface components {
          * @enum {string}
          */
         FieldEventEventTypeEnum: "ENTRY_EXIT" | "VISIT" | "DELIVERY" | "INCIDENT" | "ANOMALY";
+        FieldEventRequest: {
+            building: number;
+            unit?: number | null;
+            event_type: components["schemas"]["FieldEventEventTypeEnum"];
+            description: string;
+            /** Format: date-time */
+            occurred_at: string;
+        };
         FinancialSnapshot: {
             readonly id: number;
             /** Format: date */
@@ -2122,6 +2150,15 @@ export interface components {
         };
         GuardianProfile: {
             readonly id: number;
+            user: number;
+            /** Format: time */
+            shift_start: string;
+            /** Format: time */
+            shift_end: string;
+            active?: boolean;
+            buildings: number[];
+        };
+        GuardianProfileRequest: {
             user: number;
             /** Format: time */
             shift_start: string;
@@ -2181,6 +2218,21 @@ export interface components {
             /** Format: date-time */
             readonly signed_at: string | null;
         };
+        LeaseContractRequest: {
+            unit: number;
+            tenant: number;
+            /** Format: date */
+            start_date: string;
+            /** Format: date */
+            end_date?: string | null;
+            /** Format: decimal */
+            rent_amount: string;
+            /** Format: decimal */
+            charges_amount?: string;
+            /** Format: decimal */
+            deposit_amount?: string;
+            payment_frequency?: components["schemas"]["PaymentFrequencyEnum"];
+        };
         /**
          * @description * `DRAFT` - Brouillon
          *     * `ACTIVE` - Actif
@@ -2215,14 +2267,20 @@ export interface components {
             readonly id: number;
             readonly listing: number;
             /** Format: uri */
-            image: string;
-            /** Format: uri */
             readonly url: string | null;
             /** Texte alternatif */
             alt?: string;
             position?: number;
             /** Format: date-time */
             readonly created_at: string;
+        };
+        /** @description Photo d'annonce : envoi multipart du fichier `image`, lecture via `url` (absolue). */
+        ListingPhotoRequest: {
+            /** Format: binary */
+            image: string;
+            /** Texte alternatif */
+            alt?: string;
+            position?: number;
         };
         /** @description Modification d'une photo : texte alternatif et ordre d'affichage (le fichier ne change pas). */
         ListingPhotoUpdate: {
@@ -2235,6 +2293,14 @@ export interface components {
             position?: number;
             /** Format: date-time */
             readonly created_at: string;
+        };
+        ListingRequest: {
+            unit: number;
+            title: string;
+            description: string;
+            listing_type: components["schemas"]["ListingTypeEnum"];
+            /** Format: decimal */
+            price: string;
         };
         /**
          * @description * `DRAFT` - Brouillon
@@ -2254,7 +2320,7 @@ export interface components {
          * @enum {string}
          */
         ListingTypeEnum: "RENT" | "SALE";
-        Login: {
+        LoginRequest: {
             phone: string;
             password: string;
         };
@@ -2266,8 +2332,15 @@ export interface components {
             /** Format: date-time */
             readonly assigned_at: string;
         };
+        MaintenanceAssignmentRequest: {
+            assigned_to: number;
+        };
         MaintenanceCategory: {
             readonly id: number;
+            code: string;
+            label: string;
+        };
+        MaintenanceCategoryRequest: {
             code: string;
             label: string;
         };
@@ -2278,6 +2351,9 @@ export interface components {
             message: string;
             /** Format: date-time */
             readonly created_at: string;
+        };
+        MaintenanceLogRequest: {
+            message: string;
         };
         MaintenanceTicket: {
             readonly id: number;
@@ -2293,6 +2369,12 @@ export interface components {
             readonly created_at: string;
             /** Format: date-time */
             readonly updated_at: string;
+        };
+        MaintenanceTicketRequest: {
+            unit: number;
+            category?: number | null;
+            description: string;
+            priority?: components["schemas"]["PriorityEnum"];
         };
         Me: {
             readonly id: number;
@@ -2324,6 +2406,12 @@ export interface components {
             first_name: string;
             last_name: string;
         };
+        MemberUserRequest: {
+            phone: string;
+            email?: (string) | null;
+            first_name: string;
+            last_name: string;
+        };
         Membership: {
             readonly id: number;
             readonly user: components["schemas"]["MemberUser"];
@@ -2336,13 +2424,17 @@ export interface components {
          * @description Ajoute un membre par numéro de téléphone. Si aucun compte n'existe pour ce numéro,
          *     il est créé (prénom, nom et mot de passe requis).
          */
-        MembershipCreate: {
+        MembershipCreateRequest: {
             phone: string;
             first_name?: string;
             last_name?: string;
             email?: string;
             password?: string;
             role: string;
+        };
+        MembershipRequest: {
+            role: string;
+            is_active?: boolean;
         };
         Notification: {
             readonly id: number;
@@ -2381,6 +2473,13 @@ export interface components {
          * @enum {string}
          */
         NotificationTemplateEventTypeEnum: "RENT_DUE" | "PAYMENT_RECEIVED" | "INCIDENT_REPORTED" | "VISIT_SCHEDULED" | "PROSPECT_FOLLOWUP";
+        NotificationTemplateRequest: {
+            event_type: components["schemas"]["NotificationTemplateEventTypeEnum"];
+            channel: string;
+            subject_template: string;
+            body_template: string;
+            active?: boolean;
+        };
         Organization: {
             readonly id: number;
             name: string;
@@ -2396,12 +2495,19 @@ export interface components {
             readonly created_at: string;
         };
         /** @description Premier administrateur de l'agence : compte existant (par téléphone) ou nouveau compte. */
-        OrganizationAdmin: {
+        OrganizationAdminRequest: {
             phone: string;
             first_name?: string;
             last_name?: string;
             email?: string;
             password?: string;
+        };
+        OrganizationRequest: {
+            name: string;
+            phone?: string;
+            email?: string;
+            address?: string;
+            city?: string;
         };
         PaginatedAutomationRuleList: {
             /** @example 123 */
@@ -2838,13 +2944,10 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["Unit"][];
         };
-        PatchedBuilding: {
-            readonly id?: number;
-            readonly property?: number;
+        PatchedBuildingRequest: {
             name?: string;
         };
-        PatchedGuardianProfile: {
-            readonly id?: number;
+        PatchedGuardianProfileRequest: {
             user?: number;
             /** Format: time */
             shift_start?: string;
@@ -2853,126 +2956,63 @@ export interface components {
             active?: boolean;
             buildings?: number[];
         };
-        PatchedInAppNotification: {
-            readonly id?: number;
-            readonly title?: string;
-            readonly body?: string;
+        PatchedInAppNotificationRequest: {
             read?: boolean;
-            /** Format: date-time */
-            readonly created_at?: string;
         };
-        PatchedListing: {
-            readonly id?: number;
+        /** @description Modification d'une photo : texte alternatif et ordre d'affichage (le fichier ne change pas). */
+        PatchedListingPhotoUpdateRequest: {
+            /** Texte alternatif */
+            alt?: string;
+            position?: number;
+        };
+        PatchedListingRequest: {
             unit?: number;
-            readonly unit_label?: string;
-            readonly created_by?: number;
             title?: string;
             description?: string;
             listing_type?: components["schemas"]["ListingTypeEnum"];
             /** Format: decimal */
             price?: string;
-            readonly status?: components["schemas"]["ListingStatusEnum"];
-            /** Format: uri */
-            readonly cover?: string;
-            /** @default 0 */
-            readonly photos_count: number;
-            /** Format: date-time */
-            readonly published_at?: string | null;
-            /** Format: date-time */
-            readonly created_at?: string;
         };
-        /** @description Modification d'une photo : texte alternatif et ordre d'affichage (le fichier ne change pas). */
-        PatchedListingPhotoUpdate: {
-            readonly id?: number;
-            readonly listing?: number;
-            /** Format: uri */
-            readonly url?: string | null;
-            /** Texte alternatif */
-            alt?: string;
-            position?: number;
-            /** Format: date-time */
-            readonly created_at?: string;
-        };
-        PatchedMaintenanceCategory: {
-            readonly id?: number;
+        PatchedMaintenanceCategoryRequest: {
             code?: string;
             label?: string;
         };
-        PatchedMaintenanceTicket: {
-            readonly id?: number;
+        PatchedMaintenanceTicketRequest: {
             unit?: number;
-            readonly unit_label?: string;
             category?: number | null;
-            readonly category_label?: string | null;
-            readonly reported_by?: number;
             description?: string;
             priority?: components["schemas"]["PriorityEnum"];
-            readonly status?: components["schemas"]["TicketStatusEnum"];
-            /** Format: date-time */
-            readonly created_at?: string;
-            /** Format: date-time */
-            readonly updated_at?: string;
         };
-        PatchedMembership: {
-            readonly id?: number;
-            readonly user?: components["schemas"]["MemberUser"];
+        PatchedMembershipRequest: {
             role?: string;
             is_active?: boolean;
-            /** Format: date-time */
-            readonly created_at?: string;
         };
-        PatchedOrganization: {
-            readonly id?: number;
+        PatchedOrganizationRequest: {
             name?: string;
             phone?: string;
             email?: string;
             address?: string;
             city?: string;
-            readonly is_active?: boolean;
-            /** Format: date-time */
-            readonly trial_ends_at?: string;
-            readonly access_status?: components["schemas"]["AccessStatusEnum"];
-            /** Format: date-time */
-            readonly created_at?: string;
         };
-        PatchedPaymentMethod: {
-            readonly id?: number;
+        PatchedPaymentMethodRequest: {
             code?: string;
             label?: string;
         };
-        PatchedPaymentSchedule: {
-            readonly id?: number;
+        PatchedPaymentScheduleRequest: {
             lease_contract?: number | null;
             sale_contract?: number | null;
-            readonly contract_label?: string;
             schedule_type?: components["schemas"]["ScheduleTypeEnum"];
             /** Format: date */
             due_date?: string;
             /** Format: decimal */
             amount_due?: string;
-            readonly is_paid?: boolean;
-            /** Format: date-time */
-            readonly created_at?: string;
         };
         /** @description Demande de démo reçue par la vitrine ; seul `handled` est modifiable. */
-        PatchedPlatformDemoRequest: {
-            readonly id?: number;
-            readonly agency_name?: string;
-            readonly contact_name?: string;
-            readonly phone?: string;
-            /** Format: email */
-            readonly email?: string;
-            readonly city?: string;
-            /** Nombre de lots gérés */
-            readonly units_range?: components["schemas"]["UnitsRangeEnum"];
-            readonly message?: string;
-            /** Format: date-time */
-            readonly created_at?: string;
+        PatchedPlatformDemoRequestRequest: {
             /** Traitée */
             handled?: boolean;
         };
-        PatchedPlatformOrganization: {
-            readonly id?: number;
+        PatchedPlatformOrganizationRequest: {
             name?: string;
             phone?: string;
             email?: string;
@@ -2982,26 +3022,16 @@ export interface components {
             is_internal?: boolean;
             /** Format: date-time */
             trial_ends_at?: string;
-            readonly access_status?: components["schemas"]["AccessStatusEnum"];
-            /** @default 0 */
-            readonly member_count: number;
-            /** Format: date-time */
-            readonly created_at?: string;
         };
-        PatchedPlatformSubscription: {
-            readonly id?: number;
-            readonly organization?: number;
+        PatchedPlatformSubscriptionRequest: {
             plan?: number;
             status?: components["schemas"]["SubscriptionStatusEnum"];
             /** Format: date */
             start_date?: string;
             /** Format: date */
             end_date?: string | null;
-            /** Format: date-time */
-            readonly created_at?: string;
         };
-        PatchedProperty: {
-            readonly id?: number;
+        PatchedPropertyRequest: {
             name?: string;
             owner?: number | null;
             address?: string;
@@ -3012,17 +3042,8 @@ export interface components {
             latitude?: string | null;
             /** Format: decimal */
             longitude?: string | null;
-            /** @default 0 */
-            readonly buildings_count: number;
-            /** @default 0 */
-            readonly units_count: number;
-            /** @default 0 */
-            readonly occupied_units_count: number;
-            /** Format: date-time */
-            readonly created_at?: string;
         };
-        PatchedSubscriptionPlan: {
-            readonly id?: number;
+        PatchedSubscriptionPlanRequest: {
             name?: string;
             billing_type?: components["schemas"]["BillingTypeEnum"];
             /** Format: decimal */
@@ -3041,8 +3062,7 @@ export interface components {
          * @description Locataire de l'organisation. `id` est l'identifiant du compte, celui qu'attendent
          *     `tenant` (bail) et `payer` (paiement). Le téléphone n'est plus modifiable après création.
          */
-        PatchedTenant: {
-            readonly id?: number;
+        PatchedTenantRequest: {
             phone?: string;
             first_name?: string;
             last_name?: string;
@@ -3050,18 +3070,10 @@ export interface components {
             /** @description CNI, passeport... */
             id_document_number?: string;
             notes?: string;
-            /** @default 0 */
-            readonly active_leases: number;
-            /** Format: date-time */
-            readonly created_at?: string;
         };
-        PatchedUnit: {
-            readonly id?: number;
-            readonly building?: number;
+        PatchedUnitRequest: {
             reference?: string;
-            readonly label?: string;
             category?: components["schemas"]["UnitCategoryEnum"];
-            readonly category_label?: string;
             unit_type?: string;
             /** Format: double */
             surface?: number;
@@ -3096,21 +3108,14 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
         };
-        PaymentCreate: {
-            readonly id: number;
+        PaymentCreateRequest: {
             payer: number;
-            readonly payer_name: string;
             /** Format: decimal */
             amount_paid: string;
             payment_method: number;
-            /** Format: date-time */
-            readonly payment_date: string;
             reference?: string | null;
             note?: string;
-            readonly recorded_by: number;
-            /** Format: date-time */
-            readonly created_at: string;
-            allocations?: components["schemas"]["AllocationInput"][];
+            allocations?: components["schemas"]["AllocationInputRequest"][];
         };
         /**
          * @description * `MONTHLY` - Mensuel
@@ -3120,6 +3125,10 @@ export interface components {
         PaymentFrequencyEnum: "MONTHLY" | "QUARTERLY";
         PaymentMethod: {
             readonly id: number;
+            code: string;
+            label: string;
+        };
+        PaymentMethodRequest: {
             code: string;
             label: string;
         };
@@ -3136,6 +3145,15 @@ export interface components {
             readonly is_paid: boolean;
             /** Format: date-time */
             readonly created_at: string;
+        };
+        PaymentScheduleRequest: {
+            lease_contract?: number | null;
+            sale_contract?: number | null;
+            schedule_type: components["schemas"]["ScheduleTypeEnum"];
+            /** Format: date */
+            due_date: string;
+            /** Format: decimal */
+            amount_due: string;
         };
         /** @description Demande de démo reçue par la vitrine ; seul `handled` est modifiable. */
         PlatformDemoRequest: {
@@ -3171,8 +3189,17 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
         };
-        PlatformOrganizationCreate: {
-            readonly id: number;
+        PlatformOrganizationCreateRequest: {
+            name: string;
+            phone?: string;
+            email?: string;
+            address?: string;
+            city?: string;
+            is_active?: boolean;
+            is_internal?: boolean;
+            admin: components["schemas"]["OrganizationAdminRequest"];
+        };
+        PlatformOrganizationRequest: {
             name: string;
             phone?: string;
             email?: string;
@@ -3181,13 +3208,7 @@ export interface components {
             is_active?: boolean;
             is_internal?: boolean;
             /** Format: date-time */
-            readonly trial_ends_at: string;
-            readonly access_status: components["schemas"]["AccessStatusEnum"];
-            /** @default 0 */
-            readonly member_count: number;
-            /** Format: date-time */
-            readonly created_at: string;
-            admin: components["schemas"]["OrganizationAdmin"];
+            trial_ends_at?: string;
         };
         PlatformSubscription: {
             readonly id: number;
@@ -3200,6 +3221,14 @@ export interface components {
             end_date?: string | null;
             /** Format: date-time */
             readonly created_at: string;
+        };
+        PlatformSubscriptionRequest: {
+            plan: number;
+            status?: components["schemas"]["SubscriptionStatusEnum"];
+            /** Format: date */
+            start_date: string;
+            /** Format: date */
+            end_date?: string | null;
         };
         /**
          * @description * `LOW` - Basse
@@ -3230,6 +3259,18 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
         };
+        PropertyRequest: {
+            name: string;
+            owner?: number | null;
+            address: string;
+            city: string;
+            /** Quartier */
+            neighborhood?: string;
+            /** Format: decimal */
+            latitude?: string | null;
+            /** Format: decimal */
+            longitude?: string | null;
+        };
         Prospect: {
             readonly id: number;
             full_name: string;
@@ -3247,6 +3288,17 @@ export interface components {
             message?: string;
             /** Format: date-time */
             readonly created_at: string;
+        };
+        ProspectInterestRequest: {
+            prospect: components["schemas"]["ProspectRequest"];
+            message?: string;
+        };
+        ProspectRequest: {
+            full_name: string;
+            phone: string;
+            email?: (string) | null;
+            /** @description site, whatsapp, agent, facebook... */
+            source: string;
         };
         PublicAgency: {
             readonly id: number;
@@ -3407,6 +3459,21 @@ export interface components {
             max_users?: number | null;
             active?: boolean;
         };
+        SubscriptionPlanRequest: {
+            name: string;
+            billing_type: components["schemas"]["BillingTypeEnum"];
+            /** Format: decimal */
+            price?: string | null;
+            /**
+             * Format: double
+             * @description Pourcentage sur loyers ou ventes
+             */
+            commission_rate?: number | null;
+            max_properties?: number | null;
+            max_units?: number | null;
+            max_users?: number | null;
+            active?: boolean;
+        };
         /**
          * @description * `ACTIVE` - Actif
          *     * `SUSPENDED` - Suspendu
@@ -3432,8 +3499,18 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
         };
-        TicketStatus: {
-            status: components["schemas"]["TicketStatusEnum"];
+        /**
+         * @description Locataire de l'organisation. `id` est l'identifiant du compte, celui qu'attendent
+         *     `tenant` (bail) et `payer` (paiement). Le téléphone n'est plus modifiable après création.
+         */
+        TenantRequest: {
+            phone: string;
+            first_name: string;
+            last_name: string;
+            email?: string;
+            /** @description CNI, passeport... */
+            id_document_number?: string;
+            notes?: string;
         };
         /**
          * @description * `OPEN` - Ouvert
@@ -3444,8 +3521,14 @@ export interface components {
          * @enum {string}
          */
         TicketStatusEnum: "OPEN" | "IN_PROGRESS" | "WAITING" | "RESOLVED" | "CLOSED";
+        TicketStatusRequest: {
+            status: components["schemas"]["TicketStatusEnum"];
+        };
         TokenRefresh: {
             readonly access: string;
+            refresh: string;
+        };
+        TokenRefreshRequest: {
             refresh: string;
         };
         TypeCount: {
@@ -3479,7 +3562,16 @@ export interface components {
          * @enum {string}
          */
         UnitCategoryEnum: "APARTMENT" | "HOUSE" | "STUDIO" | "OFFICE" | "SHOP" | "LAND";
-        UnitStatus: {
+        UnitRequest: {
+            reference: string;
+            category?: components["schemas"]["UnitCategoryEnum"];
+            unit_type: string;
+            /** Format: double */
+            surface: number;
+            bedrooms?: number | null;
+            bathrooms?: number | null;
+            parking_spaces?: number | null;
+            is_furnished?: boolean;
             status: components["schemas"]["UnitStatusEnum"];
         };
         /**
@@ -3490,6 +3582,9 @@ export interface components {
          * @enum {string}
          */
         UnitStatusEnum: "FREE" | "RENTED" | "MAINTENANCE" | "SOLD";
+        UnitStatusRequest: {
+            status: components["schemas"]["UnitStatusEnum"];
+        };
         /**
          * @description * `1-20` - 1-20
          *     * `21-100` - 21-100
@@ -3673,9 +3768,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["FieldEvent"];
-                "application/x-www-form-urlencoded": components["schemas"]["FieldEvent"];
-                "multipart/form-data": components["schemas"]["FieldEvent"];
+                "application/json": components["schemas"]["FieldEventRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["FieldEventRequest"];
+                "multipart/form-data": components["schemas"]["FieldEventRequest"];
             };
         };
         responses: {
@@ -3741,9 +3836,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["GuardianProfile"];
-                "application/x-www-form-urlencoded": components["schemas"]["GuardianProfile"];
-                "multipart/form-data": components["schemas"]["GuardianProfile"];
+                "application/json": components["schemas"]["GuardianProfileRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["GuardianProfileRequest"];
+                "multipart/form-data": components["schemas"]["GuardianProfileRequest"];
             };
         };
         responses: {
@@ -3789,9 +3884,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["GuardianProfile"];
-                "application/x-www-form-urlencoded": components["schemas"]["GuardianProfile"];
-                "multipart/form-data": components["schemas"]["GuardianProfile"];
+                "application/json": components["schemas"]["GuardianProfileRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["GuardianProfileRequest"];
+                "multipart/form-data": components["schemas"]["GuardianProfileRequest"];
             };
         };
         responses: {
@@ -3836,9 +3931,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedGuardianProfile"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedGuardianProfile"];
-                "multipart/form-data": components["schemas"]["PatchedGuardianProfile"];
+                "application/json": components["schemas"]["PatchedGuardianProfileRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedGuardianProfileRequest"];
+                "multipart/form-data": components["schemas"]["PatchedGuardianProfileRequest"];
             };
         };
         responses: {
@@ -3916,9 +4011,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["LeaseContract"];
-                "application/x-www-form-urlencoded": components["schemas"]["LeaseContract"];
-                "multipart/form-data": components["schemas"]["LeaseContract"];
+                "application/json": components["schemas"]["LeaseContractRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["LeaseContractRequest"];
+                "multipart/form-data": components["schemas"]["LeaseContractRequest"];
             };
         };
         responses: {
@@ -4072,9 +4167,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Tenant"];
-                "application/x-www-form-urlencoded": components["schemas"]["Tenant"];
-                "multipart/form-data": components["schemas"]["Tenant"];
+                "application/json": components["schemas"]["TenantRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["TenantRequest"];
+                "multipart/form-data": components["schemas"]["TenantRequest"];
             };
         };
         responses: {
@@ -4120,9 +4215,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Tenant"];
-                "application/x-www-form-urlencoded": components["schemas"]["Tenant"];
-                "multipart/form-data": components["schemas"]["Tenant"];
+                "application/json": components["schemas"]["TenantRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["TenantRequest"];
+                "multipart/form-data": components["schemas"]["TenantRequest"];
             };
         };
         responses: {
@@ -4167,9 +4262,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedTenant"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedTenant"];
-                "multipart/form-data": components["schemas"]["PatchedTenant"];
+                "application/json": components["schemas"]["PatchedTenantRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedTenantRequest"];
+                "multipart/form-data": components["schemas"]["PatchedTenantRequest"];
             };
         };
         responses: {
@@ -4230,9 +4325,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Listing"];
-                "application/x-www-form-urlencoded": components["schemas"]["Listing"];
-                "multipart/form-data": components["schemas"]["Listing"];
+                "application/json": components["schemas"]["ListingRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ListingRequest"];
+                "multipart/form-data": components["schemas"]["ListingRequest"];
             };
         };
         responses: {
@@ -4278,9 +4373,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Listing"];
-                "application/x-www-form-urlencoded": components["schemas"]["Listing"];
-                "multipart/form-data": components["schemas"]["Listing"];
+                "application/json": components["schemas"]["ListingRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ListingRequest"];
+                "multipart/form-data": components["schemas"]["ListingRequest"];
             };
         };
         responses: {
@@ -4325,9 +4420,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedListing"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedListing"];
-                "multipart/form-data": components["schemas"]["PatchedListing"];
+                "application/json": components["schemas"]["PatchedListingRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedListingRequest"];
+                "multipart/form-data": components["schemas"]["PatchedListingRequest"];
             };
         };
         responses: {
@@ -4352,9 +4447,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ProspectInterest"];
-                "application/x-www-form-urlencoded": components["schemas"]["ProspectInterest"];
-                "multipart/form-data": components["schemas"]["ProspectInterest"];
+                "application/json": components["schemas"]["ProspectInterestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ProspectInterestRequest"];
+                "multipart/form-data": components["schemas"]["ProspectInterestRequest"];
             };
         };
         responses: {
@@ -4424,8 +4519,8 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "multipart/form-data": components["schemas"]["ListingPhoto"];
-                "application/x-www-form-urlencoded": components["schemas"]["ListingPhoto"];
+                "multipart/form-data": components["schemas"]["ListingPhotoRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ListingPhotoRequest"];
             };
         };
         responses: {
@@ -4533,9 +4628,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedListingPhotoUpdate"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedListingPhotoUpdate"];
-                "multipart/form-data": components["schemas"]["PatchedListingPhotoUpdate"];
+                "application/json": components["schemas"]["PatchedListingPhotoUpdateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedListingPhotoUpdateRequest"];
+                "multipart/form-data": components["schemas"]["PatchedListingPhotoUpdateRequest"];
             };
         };
         responses: {
@@ -4577,9 +4672,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["MaintenanceCategory"];
-                "application/x-www-form-urlencoded": components["schemas"]["MaintenanceCategory"];
-                "multipart/form-data": components["schemas"]["MaintenanceCategory"];
+                "application/json": components["schemas"]["MaintenanceCategoryRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["MaintenanceCategoryRequest"];
+                "multipart/form-data": components["schemas"]["MaintenanceCategoryRequest"];
             };
         };
         responses: {
@@ -4625,9 +4720,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["MaintenanceCategory"];
-                "application/x-www-form-urlencoded": components["schemas"]["MaintenanceCategory"];
-                "multipart/form-data": components["schemas"]["MaintenanceCategory"];
+                "application/json": components["schemas"]["MaintenanceCategoryRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["MaintenanceCategoryRequest"];
+                "multipart/form-data": components["schemas"]["MaintenanceCategoryRequest"];
             };
         };
         responses: {
@@ -4672,9 +4767,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedMaintenanceCategory"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedMaintenanceCategory"];
-                "multipart/form-data": components["schemas"]["PatchedMaintenanceCategory"];
+                "application/json": components["schemas"]["PatchedMaintenanceCategoryRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedMaintenanceCategoryRequest"];
+                "multipart/form-data": components["schemas"]["PatchedMaintenanceCategoryRequest"];
             };
         };
         responses: {
@@ -4740,9 +4835,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["MaintenanceTicket"];
-                "application/x-www-form-urlencoded": components["schemas"]["MaintenanceTicket"];
-                "multipart/form-data": components["schemas"]["MaintenanceTicket"];
+                "application/json": components["schemas"]["MaintenanceTicketRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["MaintenanceTicketRequest"];
+                "multipart/form-data": components["schemas"]["MaintenanceTicketRequest"];
             };
         };
         responses: {
@@ -4788,9 +4883,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["MaintenanceTicket"];
-                "application/x-www-form-urlencoded": components["schemas"]["MaintenanceTicket"];
-                "multipart/form-data": components["schemas"]["MaintenanceTicket"];
+                "application/json": components["schemas"]["MaintenanceTicketRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["MaintenanceTicketRequest"];
+                "multipart/form-data": components["schemas"]["MaintenanceTicketRequest"];
             };
         };
         responses: {
@@ -4835,9 +4930,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedMaintenanceTicket"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedMaintenanceTicket"];
-                "multipart/form-data": components["schemas"]["PatchedMaintenanceTicket"];
+                "application/json": components["schemas"]["PatchedMaintenanceTicketRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedMaintenanceTicketRequest"];
+                "multipart/form-data": components["schemas"]["PatchedMaintenanceTicketRequest"];
             };
         };
         responses: {
@@ -4862,9 +4957,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["MaintenanceAssignment"];
-                "application/x-www-form-urlencoded": components["schemas"]["MaintenanceAssignment"];
-                "multipart/form-data": components["schemas"]["MaintenanceAssignment"];
+                "application/json": components["schemas"]["MaintenanceAssignmentRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["MaintenanceAssignmentRequest"];
+                "multipart/form-data": components["schemas"]["MaintenanceAssignmentRequest"];
             };
         };
         responses: {
@@ -4913,9 +5008,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["MaintenanceLog"];
-                "application/x-www-form-urlencoded": components["schemas"]["MaintenanceLog"];
-                "multipart/form-data": components["schemas"]["MaintenanceLog"];
+                "application/json": components["schemas"]["MaintenanceLogRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["MaintenanceLogRequest"];
+                "multipart/form-data": components["schemas"]["MaintenanceLogRequest"];
             };
         };
         responses: {
@@ -4940,9 +5035,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["TicketStatus"];
-                "application/x-www-form-urlencoded": components["schemas"]["TicketStatus"];
-                "multipart/form-data": components["schemas"]["TicketStatus"];
+                "application/json": components["schemas"]["TicketStatusRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["TicketStatusRequest"];
+                "multipart/form-data": components["schemas"]["TicketStatusRequest"];
             };
         };
         responses: {
@@ -5053,9 +5148,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedInAppNotification"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedInAppNotification"];
-                "multipart/form-data": components["schemas"]["PatchedInAppNotification"];
+                "application/json": components["schemas"]["PatchedInAppNotificationRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedInAppNotificationRequest"];
+                "multipart/form-data": components["schemas"]["PatchedInAppNotificationRequest"];
             };
         };
         responses: {
@@ -5100,9 +5195,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AutomationRule"];
-                "application/x-www-form-urlencoded": components["schemas"]["AutomationRule"];
-                "multipart/form-data": components["schemas"]["AutomationRule"];
+                "application/json": components["schemas"]["AutomationRuleRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["AutomationRuleRequest"];
+                "multipart/form-data": components["schemas"]["AutomationRuleRequest"];
             };
         };
         responses: {
@@ -5147,9 +5242,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["NotificationTemplate"];
-                "application/x-www-form-urlencoded": components["schemas"]["NotificationTemplate"];
-                "multipart/form-data": components["schemas"]["NotificationTemplate"];
+                "application/json": components["schemas"]["NotificationTemplateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["NotificationTemplateRequest"];
+                "multipart/form-data": components["schemas"]["NotificationTemplateRequest"];
             };
         };
         responses: {
@@ -5191,9 +5286,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Organization"];
-                "application/x-www-form-urlencoded": components["schemas"]["Organization"];
-                "multipart/form-data": components["schemas"]["Organization"];
+                "application/json": components["schemas"]["OrganizationRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["OrganizationRequest"];
+                "multipart/form-data": components["schemas"]["OrganizationRequest"];
             };
         };
         responses: {
@@ -5216,9 +5311,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedOrganization"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedOrganization"];
-                "multipart/form-data": components["schemas"]["PatchedOrganization"];
+                "application/json": components["schemas"]["PatchedOrganizationRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedOrganizationRequest"];
+                "multipart/form-data": components["schemas"]["PatchedOrganizationRequest"];
             };
         };
         responses: {
@@ -5263,9 +5358,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["MembershipCreate"];
-                "application/x-www-form-urlencoded": components["schemas"]["MembershipCreate"];
-                "multipart/form-data": components["schemas"]["MembershipCreate"];
+                "application/json": components["schemas"]["MembershipCreateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["MembershipCreateRequest"];
+                "multipart/form-data": components["schemas"]["MembershipCreateRequest"];
             };
         };
         responses: {
@@ -5311,9 +5406,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Membership"];
-                "application/x-www-form-urlencoded": components["schemas"]["Membership"];
-                "multipart/form-data": components["schemas"]["Membership"];
+                "application/json": components["schemas"]["MembershipRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["MembershipRequest"];
+                "multipart/form-data": components["schemas"]["MembershipRequest"];
             };
         };
         responses: {
@@ -5338,9 +5433,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedMembership"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedMembership"];
-                "multipart/form-data": components["schemas"]["PatchedMembership"];
+                "application/json": components["schemas"]["PatchedMembershipRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedMembershipRequest"];
+                "multipart/form-data": components["schemas"]["PatchedMembershipRequest"];
             };
         };
         responses: {
@@ -5382,9 +5477,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PaymentMethod"];
-                "application/x-www-form-urlencoded": components["schemas"]["PaymentMethod"];
-                "multipart/form-data": components["schemas"]["PaymentMethod"];
+                "application/json": components["schemas"]["PaymentMethodRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PaymentMethodRequest"];
+                "multipart/form-data": components["schemas"]["PaymentMethodRequest"];
             };
         };
         responses: {
@@ -5430,9 +5525,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PaymentMethod"];
-                "application/x-www-form-urlencoded": components["schemas"]["PaymentMethod"];
-                "multipart/form-data": components["schemas"]["PaymentMethod"];
+                "application/json": components["schemas"]["PaymentMethodRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PaymentMethodRequest"];
+                "multipart/form-data": components["schemas"]["PaymentMethodRequest"];
             };
         };
         responses: {
@@ -5477,9 +5572,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedPaymentMethod"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedPaymentMethod"];
-                "multipart/form-data": components["schemas"]["PatchedPaymentMethod"];
+                "application/json": components["schemas"]["PatchedPaymentMethodRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedPaymentMethodRequest"];
+                "multipart/form-data": components["schemas"]["PatchedPaymentMethodRequest"];
             };
         };
         responses: {
@@ -5532,9 +5627,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PaymentCreate"];
-                "application/x-www-form-urlencoded": components["schemas"]["PaymentCreate"];
-                "multipart/form-data": components["schemas"]["PaymentCreate"];
+                "application/json": components["schemas"]["PaymentCreateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PaymentCreateRequest"];
+                "multipart/form-data": components["schemas"]["PaymentCreateRequest"];
             };
         };
         responses: {
@@ -5580,9 +5675,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AllocationRequest"];
-                "application/x-www-form-urlencoded": components["schemas"]["AllocationRequest"];
-                "multipart/form-data": components["schemas"]["AllocationRequest"];
+                "application/json": components["schemas"]["AllocationRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["AllocationRequestRequest"];
+                "multipart/form-data": components["schemas"]["AllocationRequestRequest"];
             };
         };
         responses: {
@@ -5640,9 +5735,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PaymentSchedule"];
-                "application/x-www-form-urlencoded": components["schemas"]["PaymentSchedule"];
-                "multipart/form-data": components["schemas"]["PaymentSchedule"];
+                "application/json": components["schemas"]["PaymentScheduleRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PaymentScheduleRequest"];
+                "multipart/form-data": components["schemas"]["PaymentScheduleRequest"];
             };
         };
         responses: {
@@ -5688,9 +5783,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PaymentSchedule"];
-                "application/x-www-form-urlencoded": components["schemas"]["PaymentSchedule"];
-                "multipart/form-data": components["schemas"]["PaymentSchedule"];
+                "application/json": components["schemas"]["PaymentScheduleRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PaymentScheduleRequest"];
+                "multipart/form-data": components["schemas"]["PaymentScheduleRequest"];
             };
         };
         responses: {
@@ -5735,9 +5830,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedPaymentSchedule"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedPaymentSchedule"];
-                "multipart/form-data": components["schemas"]["PatchedPaymentSchedule"];
+                "application/json": components["schemas"]["PatchedPaymentScheduleRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedPaymentScheduleRequest"];
+                "multipart/form-data": components["schemas"]["PatchedPaymentScheduleRequest"];
             };
         };
         responses: {
@@ -5815,9 +5910,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedPlatformDemoRequest"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedPlatformDemoRequest"];
-                "multipart/form-data": components["schemas"]["PatchedPlatformDemoRequest"];
+                "application/json": components["schemas"]["PatchedPlatformDemoRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedPlatformDemoRequestRequest"];
+                "multipart/form-data": components["schemas"]["PatchedPlatformDemoRequestRequest"];
             };
         };
         responses: {
@@ -5862,9 +5957,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PlatformOrganizationCreate"];
-                "application/x-www-form-urlencoded": components["schemas"]["PlatformOrganizationCreate"];
-                "multipart/form-data": components["schemas"]["PlatformOrganizationCreate"];
+                "application/json": components["schemas"]["PlatformOrganizationCreateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PlatformOrganizationCreateRequest"];
+                "multipart/form-data": components["schemas"]["PlatformOrganizationCreateRequest"];
             };
         };
         responses: {
@@ -5910,9 +6005,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PlatformOrganization"];
-                "application/x-www-form-urlencoded": components["schemas"]["PlatformOrganization"];
-                "multipart/form-data": components["schemas"]["PlatformOrganization"];
+                "application/json": components["schemas"]["PlatformOrganizationRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PlatformOrganizationRequest"];
+                "multipart/form-data": components["schemas"]["PlatformOrganizationRequest"];
             };
         };
         responses: {
@@ -5937,9 +6032,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedPlatformOrganization"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedPlatformOrganization"];
-                "multipart/form-data": components["schemas"]["PatchedPlatformOrganization"];
+                "application/json": components["schemas"]["PatchedPlatformOrganizationRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedPlatformOrganizationRequest"];
+                "multipart/form-data": components["schemas"]["PatchedPlatformOrganizationRequest"];
             };
         };
         responses: {
@@ -6012,9 +6107,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PlatformSubscription"];
-                "application/x-www-form-urlencoded": components["schemas"]["PlatformSubscription"];
-                "multipart/form-data": components["schemas"]["PlatformSubscription"];
+                "application/json": components["schemas"]["PlatformSubscriptionRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PlatformSubscriptionRequest"];
+                "multipart/form-data": components["schemas"]["PlatformSubscriptionRequest"];
             };
         };
         responses: {
@@ -6060,9 +6155,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PlatformSubscription"];
-                "application/x-www-form-urlencoded": components["schemas"]["PlatformSubscription"];
-                "multipart/form-data": components["schemas"]["PlatformSubscription"];
+                "application/json": components["schemas"]["PlatformSubscriptionRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PlatformSubscriptionRequest"];
+                "multipart/form-data": components["schemas"]["PlatformSubscriptionRequest"];
             };
         };
         responses: {
@@ -6087,9 +6182,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedPlatformSubscription"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedPlatformSubscription"];
-                "multipart/form-data": components["schemas"]["PatchedPlatformSubscription"];
+                "application/json": components["schemas"]["PatchedPlatformSubscriptionRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedPlatformSubscriptionRequest"];
+                "multipart/form-data": components["schemas"]["PatchedPlatformSubscriptionRequest"];
             };
         };
         responses: {
@@ -6158,9 +6253,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Unit"];
-                "application/x-www-form-urlencoded": components["schemas"]["Unit"];
-                "multipart/form-data": components["schemas"]["Unit"];
+                "application/json": components["schemas"]["UnitRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["UnitRequest"];
+                "multipart/form-data": components["schemas"]["UnitRequest"];
             };
         };
         responses: {
@@ -6206,9 +6301,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Building"];
-                "application/x-www-form-urlencoded": components["schemas"]["Building"];
-                "multipart/form-data": components["schemas"]["Building"];
+                "application/json": components["schemas"]["BuildingRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["BuildingRequest"];
+                "multipart/form-data": components["schemas"]["BuildingRequest"];
             };
         };
         responses: {
@@ -6253,9 +6348,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedBuilding"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedBuilding"];
-                "multipart/form-data": components["schemas"]["PatchedBuilding"];
+                "application/json": components["schemas"]["PatchedBuildingRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedBuildingRequest"];
+                "multipart/form-data": components["schemas"]["PatchedBuildingRequest"];
             };
         };
         responses: {
@@ -6305,9 +6400,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Property"];
-                "application/x-www-form-urlencoded": components["schemas"]["Property"];
-                "multipart/form-data": components["schemas"]["Property"];
+                "application/json": components["schemas"]["PropertyRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PropertyRequest"];
+                "multipart/form-data": components["schemas"]["PropertyRequest"];
             };
         };
         responses: {
@@ -6353,9 +6448,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Property"];
-                "application/x-www-form-urlencoded": components["schemas"]["Property"];
-                "multipart/form-data": components["schemas"]["Property"];
+                "application/json": components["schemas"]["PropertyRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PropertyRequest"];
+                "multipart/form-data": components["schemas"]["PropertyRequest"];
             };
         };
         responses: {
@@ -6400,9 +6495,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedProperty"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedProperty"];
-                "multipart/form-data": components["schemas"]["PatchedProperty"];
+                "application/json": components["schemas"]["PatchedPropertyRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedPropertyRequest"];
+                "multipart/form-data": components["schemas"]["PatchedPropertyRequest"];
             };
         };
         responses: {
@@ -6451,9 +6546,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Building"];
-                "application/x-www-form-urlencoded": components["schemas"]["Building"];
-                "multipart/form-data": components["schemas"]["Building"];
+                "application/json": components["schemas"]["BuildingRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["BuildingRequest"];
+                "multipart/form-data": components["schemas"]["BuildingRequest"];
             };
         };
         responses: {
@@ -6543,9 +6638,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Unit"];
-                "application/x-www-form-urlencoded": components["schemas"]["Unit"];
-                "multipart/form-data": components["schemas"]["Unit"];
+                "application/json": components["schemas"]["UnitRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["UnitRequest"];
+                "multipart/form-data": components["schemas"]["UnitRequest"];
             };
         };
         responses: {
@@ -6590,9 +6685,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedUnit"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedUnit"];
-                "multipart/form-data": components["schemas"]["PatchedUnit"];
+                "application/json": components["schemas"]["PatchedUnitRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedUnitRequest"];
+                "multipart/form-data": components["schemas"]["PatchedUnitRequest"];
             };
         };
         responses: {
@@ -6617,9 +6712,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UnitStatus"];
-                "application/x-www-form-urlencoded": components["schemas"]["UnitStatus"];
-                "multipart/form-data": components["schemas"]["UnitStatus"];
+                "application/json": components["schemas"]["UnitStatusRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["UnitStatusRequest"];
+                "multipart/form-data": components["schemas"]["UnitStatusRequest"];
             };
         };
         responses: {
@@ -6687,9 +6782,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["DemoRequest"];
-                "application/x-www-form-urlencoded": components["schemas"]["DemoRequest"];
-                "multipart/form-data": components["schemas"]["DemoRequest"];
+                "application/json": components["schemas"]["DemoRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["DemoRequestRequest"];
+                "multipart/form-data": components["schemas"]["DemoRequestRequest"];
             };
         };
         responses: {
@@ -6782,9 +6877,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ProspectInterest"];
-                "application/x-www-form-urlencoded": components["schemas"]["ProspectInterest"];
-                "multipart/form-data": components["schemas"]["ProspectInterest"];
+                "application/json": components["schemas"]["ProspectInterestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ProspectInterestRequest"];
+                "multipart/form-data": components["schemas"]["ProspectInterestRequest"];
             };
         };
         responses: {
@@ -6886,9 +6981,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["SubscriptionPlan"];
-                "application/x-www-form-urlencoded": components["schemas"]["SubscriptionPlan"];
-                "multipart/form-data": components["schemas"]["SubscriptionPlan"];
+                "application/json": components["schemas"]["SubscriptionPlanRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SubscriptionPlanRequest"];
+                "multipart/form-data": components["schemas"]["SubscriptionPlanRequest"];
             };
         };
         responses: {
@@ -6934,9 +7029,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["SubscriptionPlan"];
-                "application/x-www-form-urlencoded": components["schemas"]["SubscriptionPlan"];
-                "multipart/form-data": components["schemas"]["SubscriptionPlan"];
+                "application/json": components["schemas"]["SubscriptionPlanRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SubscriptionPlanRequest"];
+                "multipart/form-data": components["schemas"]["SubscriptionPlanRequest"];
             };
         };
         responses: {
@@ -6981,9 +7076,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedSubscriptionPlan"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedSubscriptionPlan"];
-                "multipart/form-data": components["schemas"]["PatchedSubscriptionPlan"];
+                "application/json": components["schemas"]["PatchedSubscriptionPlanRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedSubscriptionPlanRequest"];
+                "multipart/form-data": components["schemas"]["PatchedSubscriptionPlanRequest"];
             };
         };
         responses: {
@@ -7049,9 +7144,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Login"];
-                "application/x-www-form-urlencoded": components["schemas"]["Login"];
-                "multipart/form-data": components["schemas"]["Login"];
+                "application/json": components["schemas"]["LoginRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["LoginRequest"];
+                "multipart/form-data": components["schemas"]["LoginRequest"];
             };
         };
         responses: {
@@ -7114,9 +7209,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["TokenRefresh"];
-                "application/x-www-form-urlencoded": components["schemas"]["TokenRefresh"];
-                "multipart/form-data": components["schemas"]["TokenRefresh"];
+                "application/json": components["schemas"]["TokenRefreshRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["TokenRefreshRequest"];
+                "multipart/form-data": components["schemas"]["TokenRefreshRequest"];
             };
         };
         responses: {

@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 
 import { readTokens, refreshTokens } from "@/lib/auth/session";
 import { API_URL, BACKEND_RELAY } from "@/lib/config";
+import { forwardingHeaders } from "@/lib/server/forwarding";
 
 /*
  * Relais authentifié vers l'API Django (guide Next « backend-for-frontend »).
@@ -21,6 +22,7 @@ async function forward(request: NextRequest, body: ArrayBuffer | undefined, acce
     if (value) headers.set(name, value);
   }
   if (access) headers.set("authorization", `Bearer ${access}`);
+  for (const [name, value] of Object.entries(forwardingHeaders(request.headers))) headers.set(name, value);
   return fetch(target, { method: request.method, headers, body, cache: "no-store", redirect: "manual" });
 }
 

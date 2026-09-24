@@ -1,5 +1,6 @@
 import { storeTokens, type Tokens } from "@/lib/auth/session";
 import { API_URL } from "@/lib/config";
+import { forwardingHeaders } from "@/lib/server/forwarding";
 
 /** Connexion par téléphone : relaie les identifiants à Django et pose les jetons en cookies httpOnly. */
 export async function POST(request: Request) {
@@ -10,7 +11,7 @@ export async function POST(request: Request) {
 
   const login = await fetch(new URL("/api/v1/users/login/", API_URL), {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...forwardingHeaders(request.headers) },
     body: JSON.stringify(credentials),
     cache: "no-store",
   });
