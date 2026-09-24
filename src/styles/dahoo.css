@@ -1,0 +1,71 @@
+/*
+ * Dahoo — compléments au design system Vireo.
+ * Uniquement ce que Vireo ne fournit pas ; tout passe par les tokens --ax-*.
+ */
+
+/* Lien d'évitement : visible seulement au focus clavier (accessibilité). */
+.ax-skip-link {
+  position: fixed;
+  inset-block-start: var(--ax-space-3);
+  inset-inline-start: var(--ax-space-3);
+  z-index: 1000;
+  padding: var(--ax-space-2) var(--ax-space-4);
+  border-radius: var(--ax-radius-md);
+  background: var(--ax-accent);
+  color: var(--ax-on-accent);
+  font-weight: var(--ax-weight-semibold);
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+.ax-skip-link:focus-visible {
+  transform: none;
+}
+
+/* Nom de l'agence active dans l'en-tête de l'espace agence. */
+.ax-header__org {
+  font-family: var(--ax-font-display);
+  font-weight: var(--ax-weight-semibold);
+  color: var(--ax-text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* La bannière d'essai précède le contenu de la page. */
+.ax-main > .ax-alert {
+  margin-block-end: var(--ax-space-5);
+}
+
+/* État vide (liste sans résultat, module sans donnée). */
+.ax-empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--ax-space-3);
+  padding: var(--ax-space-10) var(--ax-space-6);
+  text-align: center;
+  color: var(--ax-text-muted);
+}
+.ax-empty__icon {
+  inline-size: 44px;
+  block-size: 44px;
+  color: var(--ax-accent);
+}
+.ax-empty__title {
+  margin: 0;
+  font-family: var(--ax-font-display);
+  font-size: var(--ax-text-lg);
+  color: var(--ax-text-strong);
+}
+
+/* Mot-marque de la sidebar : police de titre et indigo de marque, comme le logo. */
+.ax-sidebar__wordmark {
+  font-family: var(--ax-font-display);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--ax-brand);
+}
+
+/* Tiroir mobile : fond opaque (le verre de la sidebar laissait voir le contenu dessous). */
+[data-ax-drawer='open'] .ax-sidebar {
+  background: var(--ax-surface-solid);
+}
