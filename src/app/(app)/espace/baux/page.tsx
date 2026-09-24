@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 
-import { ModulePending } from "@/components/app/ModulePending";
+import { LeasesScreen } from "./LeasesScreen";
 
-export const metadata: Metadata = { title: "Baux" };
+export const metadata: Metadata = {
+  title: "Baux",
+  description: "Contrats de location de l'agence : création, activation, résiliation et suivi des échéances.",
+};
 
 export default function Page() {
-  return <ModulePending title="Baux" description="La création, l'activation et le suivi des contrats de location." />;
+  return <LeasesScreen />;
 }

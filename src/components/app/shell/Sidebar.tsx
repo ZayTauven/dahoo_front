@@ -30,7 +30,7 @@ export function Sidebar() {
       <div className="ax-sidebar__brand">
         <Link className="ax-sidebar__logo" href="/espace" aria-label="Dahoo, tableau de bord">
           <span className="ax-sidebar__mark" aria-hidden="true">
-            <Image src="/brand/mark.png" alt="" width={28} height={28} priority />
+            <Image src="/brand/mark.png" alt="" width={28} height={28} loading="eager" />
           </span>
           <span className="ax-sidebar__wordmark">DAHOO</span>
         </Link>

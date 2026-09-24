@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 
-import { ModulePending } from "@/components/app/ModulePending";
+import { TicketsScreen } from "./_components/TicketsScreen";
 
-export const metadata: Metadata = { title: "Maintenance" };
+export const metadata: Metadata = {
+  title: "Maintenance",
+  description: "Tickets d'intervention de l'agence : signalement, affectation et suivi jusqu'à la clôture.",
+};
 
 export default function Page() {
-  return <ModulePending title="Maintenance" description="Les tickets d'intervention, leur affectation et leur suivi." />;
+  return <TicketsScreen />;
 }

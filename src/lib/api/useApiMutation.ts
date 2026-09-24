@@ -7,6 +7,9 @@ import { useToast } from "@/components/app/ui/Toast";
 
 import { ApiError, type FieldErrors } from "./errors";
 
+/** Clés d'erreur de l'API qui ne correspondent jamais à un champ de formulaire. */
+const GLOBAL_FIELDS = ["status", "non_field_errors"];
+
 /**
  * Mutation de l'espace agence : erreurs par champ pour le formulaire, message général sinon,
  * notification de succès et rafraîchissement des listes concernées.
@@ -24,11 +27,14 @@ export function useApiMutation<TVariables, TResult>({
   invalidate = [],
   success,
   onSuccess,
+  displayedFields,
 }: {
   mutationFn: (variables: TVariables) => Promise<TResult>;
   invalidate?: QueryKey[];
   success?: string | ((result: TResult) => string);
   onSuccess?: (result: TResult) => void;
+  /** Champs affichés par le formulaire : une erreur sur un autre champ devient le message général. */
+  displayedFields?: string[];
 }) {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -49,8 +55,12 @@ export function useApiMutation<TVariables, TResult>({
     onError: (error) => {
       if (error instanceof ApiError) {
         setFieldErrors(error.fields);
-        // Erreur rattachée à aucun champ affiché : message général (le formulaire l'affiche en tête).
-        if (!Object.keys(error.fields).length || error.status !== 400) setFormError(error.message);
+        // Message général quand l'erreur n'est rattachée à aucun champ affiché par le formulaire
+        // (ex. {"status": "Action impossible…"} lors d'une publication refusée).
+        const hidden = Object.entries(error.fields).find(([field]) => displayedFields && !displayedFields.includes(field));
+        const unattached = !Object.keys(error.fields).length || error.status !== 400 || GLOBAL_FIELDS.some((field) => field in error.fields);
+        if (hidden) setFormError(hidden[1]);
+        else if (unattached) setFormError(error.message);
       } else {
         setFormError("Une erreur est survenue. Vérifiez votre connexion et réessayez.");
       }

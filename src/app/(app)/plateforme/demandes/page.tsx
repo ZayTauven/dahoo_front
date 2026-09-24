@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 
-import { ModulePending } from "@/components/app/ModulePending";
+import { DemoRequestsScreen } from "./DemoRequestsScreen";
 
-export const metadata: Metadata = { title: "Demandes de démo" };
+export const metadata: Metadata = {
+  title: "Demandes de démo",
+  description: "Demandes de démonstration envoyées par les agences depuis le site : suivi et création des agences.",
+  robots: { index: false, follow: false },
+};
 
 export default function Page() {
-  return <ModulePending title="Demandes de démo" description="Les demandes de démonstration envoyées par les agences depuis le site." />;
+  return <DemoRequestsScreen />;
 }

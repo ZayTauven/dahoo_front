@@ -56,7 +56,7 @@ export function SiteHeader() {
     >
       <Container className="flex h-[72px] items-center gap-6">
         <Link href="/" className="shrink-0" aria-label="Dahoo, accueil">
-          <Image src="/brand/logo.png" alt="Dahoo" width={128} height={42} priority />
+          <Image src="/brand/logo.png" alt="Dahoo" width={128} height={42} loading="eager" />
         </Link>
 
         <nav aria-label="Navigation principale" className="hidden flex-1 justify-center lg:flex">

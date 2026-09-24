@@ -17,8 +17,10 @@ const nextConfig: NextConfig = {
         pathname: "/media/**",
       },
     ],
-    // En développement l'API tourne sur localhost : Next 16 bloque les IP locales par défaut.
-    dangerouslyAllowLocalIP: process.env.NODE_ENV !== "production",
+    // Next 16 bloque les images venant d'IP privées (protection SSRF). On ne l'autorise que si l'API
+    // elle-même est locale (poste de développement, démo) : les motifs ci-dessus limitent déjà les
+    // images à /media/** sur l'hôte de l'API. Avec une API sur un vrai domaine, la protection reste active.
+    dangerouslyAllowLocalIP: ["localhost", "127.0.0.1", "[::1]"].includes(apiUrl.hostname),
   },
 };
 

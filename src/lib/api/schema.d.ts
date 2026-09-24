@@ -2000,6 +2000,9 @@ export interface components {
         AllocationRequestRequest: {
             allocations: components["schemas"]["AllocationInputRequest"][];
         };
+        AllocationResult: {
+            allocations: components["schemas"]["PaymentAllocation"][];
+        };
         AutomationRule: {
             readonly id: number;
             event: components["schemas"]["EventEnum"];
@@ -2348,6 +2351,7 @@ export interface components {
             readonly id: number;
             readonly ticket: number;
             readonly user: number;
+            readonly user_name: string;
             message: string;
             /** Format: date-time */
             readonly created_at: string;
@@ -2362,6 +2366,11 @@ export interface components {
             category?: number | null;
             readonly category_label: string | null;
             readonly reported_by: number;
+            readonly reported_by_name: string;
+            readonly assigned_to: number | null;
+            readonly assigned_to_name: string | null;
+            /** Format: date-time */
+            readonly assigned_at: string | null;
             description: string;
             priority?: components["schemas"]["PriorityEnum"];
             readonly status: components["schemas"]["TicketStatusEnum"];
@@ -3091,7 +3100,7 @@ export interface components {
             amount_paid: string;
             payment_method: number;
             /** Format: date-time */
-            readonly payment_date: string;
+            payment_date?: string;
             reference?: string | null;
             note?: string;
             readonly recorded_by: number;
@@ -3113,6 +3122,8 @@ export interface components {
             /** Format: decimal */
             amount_paid: string;
             payment_method: number;
+            /** Format: date-time */
+            payment_date?: string;
             reference?: string | null;
             note?: string;
             allocations?: components["schemas"]["AllocationInputRequest"][];
@@ -3142,6 +3153,13 @@ export interface components {
             due_date: string;
             /** Format: decimal */
             amount_due: string;
+            /**
+             * Format: decimal
+             * @default 0.00
+             */
+            readonly amount_paid: string;
+            /** Format: double */
+            readonly remaining_amount: number;
             readonly is_paid: boolean;
             /** Format: date-time */
             readonly created_at: string;
@@ -3975,6 +3993,8 @@ export interface operations {
                 ordering?: string;
                 /** @description Un numéro de page de l'ensemble des résultats. */
                 page?: number;
+                /** @description Un terme de recherche. */
+                search?: string;
                 /**
                  * @description * `DRAFT` - Brouillon
                  *     * `ACTIVE` - Actif
@@ -5686,7 +5706,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaymentAllocation"][];
+                    "application/json": components["schemas"]["AllocationResult"];
                 };
             };
         };

@@ -14,7 +14,7 @@ export default function LoginPage() {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[52%_48%]">
       <aside className="relative hidden overflow-hidden lg:block" aria-hidden="true">
-        <Image src="/images/site/slider-01.webp" alt="" fill priority sizes="52vw" className="object-cover" />
+        <Image src="/images/site/slider-01.webp" alt="" fill preload sizes="52vw" className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-brand-900/85 via-brand-900/30 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 flex flex-col gap-4 p-12 text-white">
           <p className="font-display text-3xl leading-tight font-semibold">
@@ -29,7 +29,7 @@ export default function LoginPage() {
       <main id="contenu" className="flex items-center justify-center px-6 py-10">
         <div className="flex w-full max-w-[420px] flex-col gap-8">
           <Link href="/" aria-label="Dahoo, retour au site">
-            <Image src="/brand/logo.png" alt="Dahoo" width={150} height={49} priority />
+            <Image src="/brand/logo.png" alt="Dahoo" width={150} height={49} loading="eager" />
           </Link>
           <header className="flex flex-col gap-1">
             <h1 className="font-display text-text-strong text-3xl font-bold">Connexion</h1>

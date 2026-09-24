@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 
-import { ModulePending } from "@/components/app/ModulePending";
+import { SchedulesScreen } from "./SchedulesScreen";
 
-export const metadata: Metadata = { title: "Échéances" };
+export const metadata: Metadata = {
+  title: "Échéances",
+  description:
+    "Loyers et charges à encaisser, échéances en retard et encaissements du mois.",
+};
 
 export default function Page() {
-  return <ModulePending title="Échéances" description="Les loyers et charges à encaisser, et leur état de paiement." />;
+  return <SchedulesScreen />;
 }

@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 
-import { ModulePending } from "@/components/app/ModulePending";
+import { TeamScreen } from "./TeamScreen";
 
-export const metadata: Metadata = { title: "Équipe" };
+export const metadata: Metadata = {
+  title: "Équipe",
+  description: "Les membres de votre agence, leurs rôles et leurs accès.",
+};
 
 export default function Page() {
-  return <ModulePending title="Équipe" description="Les membres de votre agence et leurs rôles." />;
+  return <TeamScreen />;
 }

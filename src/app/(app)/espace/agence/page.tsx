@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 
-import { ModulePending } from "@/components/app/ModulePending";
+import { AgencyScreen } from "./AgencyScreen";
 
-export const metadata: Metadata = { title: "Mon agence" };
+export const metadata: Metadata = {
+  title: "Mon agence",
+  description: "Les informations de votre agence et votre abonnement Dahoo.",
+};
 
 export default function Page() {
-  return <ModulePending title="Mon agence" description="Les informations de votre agence et votre abonnement." />;
+  return <AgencyScreen />;
 }

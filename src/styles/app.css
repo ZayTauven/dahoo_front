@@ -46,6 +46,7 @@
   --color-canvas: var(--ax-canvas);
   --color-surface: var(--ax-surface);
   --color-surface-subtle: var(--ax-surface-subtle);
+  --color-surface-solid: var(--ax-surface-solid);
   --color-surface-raised: var(--ax-surface-raised);
   --color-surface-overlay: var(--ax-surface-overlay);
   --color-border-default: var(--ax-border);
@@ -54,6 +55,7 @@
   --color-text: var(--ax-text);
   --color-text-muted: var(--ax-text-muted);
   --color-text-subtle: var(--ax-text-subtle);
+  --color-text-disabled: var(--ax-text-disabled);
   --color-accent: var(--ax-accent);
   --color-accent-50: var(--ax-accent-50);
   --color-accent-100: var(--ax-accent-100);

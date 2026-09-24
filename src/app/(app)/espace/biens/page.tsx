@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 
-import { ModulePending } from "@/components/app/ModulePending";
+import { PropertiesScreen } from "./PropertiesScreen";
 
-export const metadata: Metadata = { title: "Biens" };
+export const metadata: Metadata = {
+  title: "Biens",
+  description: "Les biens de l'agence, leurs bâtiments, leurs lots et leur taux d'occupation.",
+};
 
 export default function Page() {
-  return <ModulePending title="Biens" description="Vos biens, bâtiments et lots, avec leur statut d'occupation." />;
+  return <PropertiesScreen />;
 }

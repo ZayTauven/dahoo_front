@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 
-import { ModulePending } from "@/components/app/ModulePending";
+import { PaymentsScreen } from "./PaymentsScreen";
 
-export const metadata: Metadata = { title: "Paiements" };
+export const metadata: Metadata = {
+  title: "Paiements",
+  description:
+    "Encaissements de l'agence et leur affectation aux échéances des baux.",
+};
 
 export default function Page() {
-  return <ModulePending title="Paiements" description="L'enregistrement des encaissements et leur affectation aux échéances." />;
+  return <PaymentsScreen />;
 }

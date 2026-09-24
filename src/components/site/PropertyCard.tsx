@@ -24,7 +24,7 @@ export function listingPrice(listing: Pick<ListingCardData, "listing_type" | "pr
 }
 
 /** Carte d'annonce du portail (reprend la carte « property » de Crafto). */
-export function PropertyCard({ listing, priority = false }: { listing: ListingCardData; priority?: boolean }) {
+export function PropertyCard({ listing, preload = false }: { listing: ListingCardData; preload?: boolean }) {
   const isRent = listing.listing_type === "RENT";
   const place = [listing.neighborhood, listing.city].filter(Boolean).join(", ");
   const href = `/annonces/${listing.id}`;
@@ -37,7 +37,7 @@ export function PropertyCard({ listing, priority = false }: { listing: ListingCa
             src={listing.cover}
             alt=""
             fill
-            priority={priority}
+            preload={preload}
             sizes="(min-width: 1200px) 380px, (min-width: 640px) 50vw, 100vw"
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
