@@ -118,13 +118,22 @@ Communs : `src/lib/format.ts` (`formatMoney`, `formatDate`, `formatNumber`, `day
 | --- | --- | --- |
 | **P0 Fondations** | Socle Vireo en Next 16, charte, layouts, authentification BFF, client API, kit d'interface, module de référence Locataires | Fait |
 | **P1 Backend public** | API publique (annonces, agences, stats, tarifs, démo), photos, filtres et libellés, limitation de débit derrière le front | Fait (branche `feat/api-publique`) |
-| **P2 Site public** | Conversion des pages Crafto, branchement sur l'API publique | En cours |
-| **P3 Espace agence** | Un module par agent | En cours |
-| **P4 Plateforme** | Écrans admin Dahoo | En cours |
-| **P5 Recette** | Parcours complets, responsive, accessibilité, performances, SEO | À faire |
+| **P2 Site public** | Conversion des pages Crafto, branchement sur l'API publique | Fait |
+| **P3 Espace agence** | Un module par agent | Fait |
+| **P4 Plateforme** | Écrans admin Dahoo | Fait |
+| **P5 Recette** | 34 pages vérifiées dans le navigateur (statut, erreurs, titres, 390 px), parcours de connexion et module de référence ; correctifs backend issus de la recette | Fait (première passe) |
 
 ## 6. Points d'attention
 
 - **Licences Envato.** Crafto et Vireo sont sous licence *Regular*. Pour un SaaS dont les utilisateurs paient l'accès, Envato exige en principe une licence *Extended* : à vérifier avant la mise en production.
 - **Médias en production.** Les photos sont servies par Django uniquement en `DEBUG` : prévoir Nginx ou un stockage objet.
 - **IP des visiteurs.** En production, le reverse proxy doit écraser `X-Real-IP` (`proxy_set_header X-Real-IP $remote_addr;`) et `DAHOO_PROXY_KEY` (front) doit égaler `INTERNAL_PROXY_KEY` (API).
+
+## 7. Reste à faire
+
+- **Offres d'abonnement** : aucune n'est configurée ; les créer dans l'admin Django (la page Tarifs affiche « Tarifs sur mesure » en attendant). Un écran « Offres » dans l'espace plateforme reste à faire.
+- **Génération automatique des échéances** à l'activation d'un bail (aujourd'hui saisies une à une).
+- **Mise en commun** du bandeau de titre et de la pagination du site (`agences/_components`, `_annonces`) dans `src/components/site/`.
+- **Tableau de bord** de l'espace agence : graphiques (encaissements, taux d'occupation).
+- **À confirmer** : l'adresse `contact@dahoo.sn` affichée sur la page Contact et les textes d'engagement (mission, valeurs).
+- **Avant la production** : licences Envato Extended, service des médias (Nginx ou stockage objet), `X-Real-IP` posé par le reverse proxy, `DAHOO_PROXY_KEY` = `INTERNAL_PROXY_KEY`.
