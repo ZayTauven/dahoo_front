@@ -7,29 +7,42 @@ import {
   IconMenu2,
   IconMoon,
   IconPalette,
+  IconSearch,
   IconSun,
   IconWorld,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSyncExternalStore } from "react";
 
 import { useUiTheme } from "@/components/app/customizer/UiThemeProvider";
+import { NotificationBell } from "@/components/app/notifications/NotificationBell";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import { setActiveOrganization } from "@/lib/api/client";
 import { useSession } from "@/lib/auth/useSession";
 
+const noop = () => () => {};
+/** Raccourci affiché : ⌘K sur Mac, Ctrl K ailleurs (lu côté client, « Ctrl K » au rendu serveur). */
+const useShortcutLabel = () =>
+  useSyncExternalStore(
+    noop,
+    () => (/Mac|iPhone|iPad/.test(navigator.userAgent) ? "⌘K" : "Ctrl K"),
+    () => "Ctrl K",
+  );
+
 function initials(first?: string, last?: string): string {
   return `${first?.[0] ?? ""}${last?.[0] ?? ""}`.toUpperCase() || "?";
 }
 
-export function Header({ onMenu }: { onMenu: () => void }) {
+export function Header({ onMenu, onCommand }: { onMenu: () => void; onCommand: () => void }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { resolved, toggleTheme } = useTheme();
   const { user, membership, memberships } = useSession();
   const { openCustomizer } = useUiTheme();
+  const shortcut = useShortcutLabel();
 
   const switchOrganization = (organizationId: number) => {
     setActiveOrganization(organizationId);
@@ -86,7 +99,33 @@ export function Header({ onMenu }: { onMenu: () => void }) {
         membership && <span className="ax-header__org">{membership.organization_name}</span>
       )}
 
+      <button
+        type="button"
+        className="ax-search ax-header__search"
+        onClick={onCommand}
+        aria-haspopup="dialog"
+        aria-keyshortcuts="Control+K Meta+K"
+      >
+        <IconSearch className="ax-icon ax-search__icon" stroke={1.75} aria-hidden="true" />
+        <span className="ax-search__placeholder">Rechercher ou aller à…</span>
+        <kbd className="ax-search__keycap" aria-hidden="true">
+          {shortcut}
+        </kbd>
+      </button>
+
       <span className="ax-header__spacer" />
+
+      <button
+        type="button"
+        className="ax-icon-btn ax-header__search-icon"
+        onClick={onCommand}
+        aria-haspopup="dialog"
+        aria-label="Rechercher ou aller à"
+      >
+        <IconSearch className="ax-icon" stroke={1.75} aria-hidden="true" />
+      </button>
+
+      <NotificationBell allHref={membership ? "/espace/notifications" : "/plateforme/notifications"} />
 
       <Link className="ax-icon-btn" href="/" aria-label="Voir le site public" title="Voir le site public">
         <IconWorld className="ax-icon" stroke={1.75} aria-hidden="true" />

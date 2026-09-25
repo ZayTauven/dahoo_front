@@ -95,3 +95,145 @@
     display: inline-flex;
   }
 }
+
+/* ── Notifications (cloche et page) ── */
+
+/* La ligne est un bouton (ouvre l'écran concerné) : remise à zéro des styles de bouton. */
+button.ax-notif__row {
+  inline-size: 100%;
+  font: inherit;
+  text-align: start;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+/* Panneau de la cloche : en-tête, onglets et lien du bas fixes, seule la liste défile. */
+.ax-notif__menu {
+  display: flex;
+  flex-direction: column;
+  max-block-size: min(80vh, 560px);
+  overflow: hidden;
+}
+.ax-notif__menu .ax-notif__list {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.ax-notif__menu .ax-notif__tabs {
+  align-self: flex-start;
+}
+.ax-notif__menu .ax-notif__text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ax-notif__chip--accent {
+  color: var(--ax-accent-text);
+  background: var(--ax-accent-wash);
+}
+.ax-notif__chip--danger {
+  color: var(--ax-danger-500);
+  background: var(--ax-danger-50);
+}
+/* Mobile : le panneau occupe la largeur de l'écran sous l'en-tête. */
+@media (max-width: 575.98px) {
+  .ax-notif__menu {
+    position: fixed;
+    inset-block-start: calc(var(--ax-header-h) + var(--ax-space-2));
+    inset-inline: var(--ax-space-2);
+    inline-size: auto;
+  }
+}
+
+/* ── Palette de commandes (Ctrl+K) ── */
+
+/* Vireo peignait la ligne active et l'onglet actif en --ax-accent sur --ax-accent-wash (≈ 2:1) :
+   texte de l'accent lisible (≥ 4.5:1) à la place. */
+.ax-command__row.is-active,
+.ax-notif__tab.is-active {
+  color: var(--ax-accent-text);
+}
+.ax-command__row {
+  font: inherit;
+}
+.ax-command__icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 32px;
+  block-size: 32px;
+  color: var(--ax-text-subtle);
+  background: var(--ax-surface-subtle);
+  border-radius: var(--ax-radius-md);
+}
+.ax-command__row.is-active .ax-command__icon {
+  color: var(--ax-accent-text);
+  background: var(--ax-surface);
+}
+.ax-command__icon .ax-icon {
+  inline-size: var(--ax-icon-sm);
+  block-size: var(--ax-icon-sm);
+}
+.ax-command__text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+.ax-command__subtitle {
+  overflow: hidden;
+  font-size: var(--ax-text-xs);
+  color: var(--ax-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ax-command__foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ax-space-2) var(--ax-space-4);
+  padding: var(--ax-space-3) var(--ax-space-5);
+  font-size: var(--ax-text-xs);
+  color: var(--ax-text-muted);
+  border-block-start: 1px solid var(--ax-border);
+}
+.ax-command__foot > span:nth-child(3) {
+  margin-inline-start: auto;
+}
+
+/* Barre de recherche de l'en-tête : pilule sur grand écran, icône sur mobile. */
+.ax-header__search {
+  flex: 0 1 280px;
+  margin-inline-start: var(--ax-space-2);
+}
+.ax-header__search-icon {
+  display: none;
+}
+@media (max-width: 767.98px) {
+  .ax-header__search {
+    display: none;
+  }
+}
+/* Très petit écran : le nom de l'agence (réduit à « A… ») cède la place aux actions. */
+@media (max-width: 479.98px) {
+  .ax-header__org {
+    display: none;
+  }
+}
+@media (max-width: 767.98px) {
+  .ax-header__search-icon {
+    display: inline-flex;
+  }
+}
+/* Sur un en-tête coloré (personnaliseur), la pilule suit les couleurs de l'en-tête. */
+:is([data-ax-header='dark'], [data-ax-header='brand'], [data-ax-header='gradient']) .ax-header .ax-search {
+  color: var(--ax-header-fg);
+  background: var(--ax-header-hover);
+  border-color: var(--ax-header-border);
+}
+:is([data-ax-header='dark'], [data-ax-header='brand'], [data-ax-header='gradient']) .ax-header .ax-search__icon {
+  color: var(--ax-header-fg);
+}

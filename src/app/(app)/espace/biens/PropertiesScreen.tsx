@@ -10,6 +10,7 @@ import { DataTable, type Column } from "@/components/app/ui/DataTable";
 import { SelectField } from "@/components/app/ui/fields";
 import { ListToolbar } from "@/components/app/ui/ListToolbar";
 import { useListParams } from "@/hooks/useListParams";
+import { useNewParam } from "@/hooks/useNewParam";
 import { api } from "@/lib/api/client";
 import { unwrap } from "@/lib/api/errors";
 import { useSession } from "@/lib/auth/useSession";
@@ -27,6 +28,7 @@ export function PropertiesScreen() {
   const { can, isReadOnly } = useSession();
   const list = useListParams(["city"] as const);
   const [editing, setEditing] = useState<Property | "new" | null>(null);
+  const shortcut = useNewParam();
   const [deleting, setDeleting] = useState<Property | null>(null);
 
   const properties = useQuery({
@@ -168,7 +170,15 @@ export function PropertiesScreen() {
         </div>
       </section>
 
-      {editing && <PropertyFormModal property={editing === "new" ? null : editing} onClose={() => setEditing(null)} />}
+      {(editing || (shortcut.requested && can("property.create") && canWrite)) && (
+        <PropertyFormModal
+          property={editing && editing !== "new" ? editing : null}
+          onClose={() => {
+            setEditing(null);
+            shortcut.clear();
+          }}
+        />
+      )}
       <DeletePropertyDialog property={deleting} onClose={() => setDeleting(null)} />
     </>
   );

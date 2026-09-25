@@ -962,6 +962,40 @@ export interface paths {
         patch: operations["v1_notifications_inapp_partial_update"];
         trace?: never;
     };
+    "/api/v1/notifications/inapp/read-all/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Marque comme lues toutes les notifications visibles (agence active et plateforme). */
+        post: operations["v1_notifications_inapp_read_all_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/inapp/summary/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Nombre de notifications non lues (pastille de la cloche, interrogée régulièrement). */
+        get: operations["v1_notifications_inapp_summary_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/notifications/rules/": {
         parameters: {
             query?: never;
@@ -1848,6 +1882,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/search/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_search_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/subscriptions/payments/": {
         parameters: {
             query?: never;
@@ -2143,6 +2193,15 @@ export interface components {
          * @enum {string}
          */
         ChannelEnum: "EMAIL" | "SMS" | "WHATSAPP" | "IN_APP";
+        /**
+         * @description * `light` - Clair
+         *     * `dark` - Sombre
+         *     * `brand` - Marque
+         *     * `gradient` - Dégradé
+         *     * `transparent` - Transparent
+         * @enum {string}
+         */
+        ChromeSchemeEnum: "light" | "dark" | "brand" | "gradient" | "transparent";
         CityCount: {
             city: string;
             listings_count: number;
@@ -2277,22 +2336,33 @@ export interface components {
             active?: boolean;
             buildings: number[];
         };
-        /**
-         * @description * `light` - Clair
-         *     * `dark` - Sombre
-         *     * `brand` - Marque
-         *     * `gradient` - Dégradé
-         *     * `transparent` - Transparent
-         * @enum {string}
-         */
-        HeaderEnum: "light" | "dark" | "brand" | "gradient" | "transparent";
         InAppNotification: {
             readonly id: number;
+            readonly kind: components["schemas"]["InAppNotificationKindEnum"];
             readonly title: string;
             readonly body: string;
+            readonly link: string;
             read?: boolean;
             /** Format: date-time */
             readonly created_at: string;
+        };
+        /**
+         * @description * `VISIT_REQUEST` - Demande de visite
+         *     * `PAYMENT_RECEIVED` - Paiement enregistré
+         *     * `TICKET_CREATED` - Ticket de maintenance
+         *     * `TICKET_ASSIGNED` - Ticket assigné
+         *     * `RENT_OVERDUE` - Loyer en retard
+         *     * `LEASE_ENDING` - Bail arrivant à échéance
+         *     * `TRIAL_ENDING` - Fin d'essai
+         *     * `DEMO_REQUEST` - Demande de démo
+         * @enum {string}
+         */
+        InAppNotificationKindEnum: "VISIT_REQUEST" | "PAYMENT_RECEIVED" | "TICKET_CREATED" | "TICKET_ASSIGNED" | "RENT_OVERDUE" | "LEASE_ENDING" | "TRIAL_ENDING" | "DEMO_REQUEST";
+        InAppReadAll: {
+            updated: number;
+        };
+        InAppSummary: {
+            unread: number;
         };
         Insight: {
             readonly id: number;
@@ -2306,21 +2376,13 @@ export interface components {
             readonly created_at: string;
         };
         InsightItem: {
-            kind: components["schemas"]["KindEnum"];
+            kind: components["schemas"]["InsightKindEnum"];
             severity: components["schemas"]["SeverityEnum"];
             title: string;
             /** Format: decimal */
             amount: string | null;
             href: string;
         };
-        /**
-         * @description * `PAYMENT_RISK` - Risque d’impayé
-         *     * `HIGH_VACANCY` - Vacance élevée
-         *     * `MAINTENANCE_ALERT` - Maintenance excessive
-         *     * `UNDERPRICED` - Bien sous-évalué
-         * @enum {string}
-         */
-        InsightTypeEnum: "PAYMENT_RISK" | "HIGH_VACANCY" | "MAINTENANCE_ALERT" | "UNDERPRICED";
         /**
          * @description * `overdue` - overdue
          *     * `urgent_tickets` - urgent_tickets
@@ -2330,7 +2392,15 @@ export interface components {
          *     * `interests` - interests
          * @enum {string}
          */
-        KindEnum: "overdue" | "urgent_tickets" | "leases_ending" | "collection" | "vacancy" | "interests";
+        InsightKindEnum: "overdue" | "urgent_tickets" | "leases_ending" | "collection" | "vacancy" | "interests";
+        /**
+         * @description * `PAYMENT_RISK` - Risque d’impayé
+         *     * `HIGH_VACANCY` - Vacance élevée
+         *     * `MAINTENANCE_ALERT` - Maintenance excessive
+         *     * `UNDERPRICED` - Bien sous-évalué
+         * @enum {string}
+         */
+        InsightTypeEnum: "PAYMENT_RISK" | "HIGH_VACANCY" | "MAINTENANCE_ALERT" | "UNDERPRICED";
         LeaseContract: {
             readonly id: number;
             readonly status: components["schemas"]["LeaseStatusEnum"];
@@ -2734,8 +2804,8 @@ export interface components {
             accent?: components["schemas"]["AccentEnum"];
             /** @description #RRGGBB, si accent = custom */
             accent_custom?: string;
-            sidebar?: components["schemas"]["SidebarEnum"];
-            header?: components["schemas"]["HeaderEnum"];
+            sidebar?: components["schemas"]["ChromeSchemeEnum"];
+            header?: components["schemas"]["ChromeSchemeEnum"];
             shell?: components["schemas"]["ShellEnum"];
             sidebar_behavior?: components["schemas"]["SidebarBehaviorEnum"];
             page?: components["schemas"]["PageEnum"];
@@ -2746,8 +2816,8 @@ export interface components {
             accent?: components["schemas"]["AccentEnum"];
             /** @description #RRGGBB, si accent = custom */
             accent_custom?: string;
-            sidebar?: components["schemas"]["SidebarEnum"];
-            header?: components["schemas"]["HeaderEnum"];
+            sidebar?: components["schemas"]["ChromeSchemeEnum"];
+            header?: components["schemas"]["ChromeSchemeEnum"];
             shell?: components["schemas"]["ShellEnum"];
             sidebar_behavior?: components["schemas"]["SidebarBehaviorEnum"];
             page?: components["schemas"]["PageEnum"];
@@ -3805,6 +3875,28 @@ export interface components {
          * @enum {string}
          */
         ScheduleTypeEnum: "RENT" | "CHARGE" | "SALE";
+        SearchResponse: {
+            query: string;
+            results: components["schemas"]["SearchResult"][];
+        };
+        SearchResult: {
+            type: components["schemas"]["SearchResultTypeEnum"];
+            id: number;
+            title: string;
+            subtitle: string;
+            /** @description Chemin de l'écran dans le front. */
+            link: string;
+        };
+        /**
+         * @description * `property` - property
+         *     * `unit` - unit
+         *     * `tenant` - tenant
+         *     * `lease` - lease
+         *     * `listing` - listing
+         *     * `ticket` - ticket
+         * @enum {string}
+         */
+        SearchResultTypeEnum: "property" | "unit" | "tenant" | "lease" | "listing" | "ticket";
         /**
          * @description * `danger` - danger
          *     * `warning` - warning
@@ -3826,15 +3918,6 @@ export interface components {
          * @enum {string}
          */
         SidebarBehaviorEnum: "collapsible" | "expanded" | "compact";
-        /**
-         * @description * `light` - Clair
-         *     * `dark` - Sombre
-         *     * `brand` - Marque
-         *     * `gradient` - Dégradé
-         *     * `transparent` - Transparent
-         * @enum {string}
-         */
-        SidebarEnum: "light" | "dark" | "brand" | "gradient" | "transparent";
         Subscription: {
             readonly id: number;
             readonly plan: components["schemas"]["SubscriptionPlan"];
@@ -5596,6 +5679,8 @@ export interface operations {
             query?: {
                 /** @description Un numéro de page de l'ensemble des résultats. */
                 page?: number;
+                /** @description Seulement les non lues. */
+                unread?: boolean;
             };
             header?: never;
             path?: never;
@@ -5657,6 +5742,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InAppNotification"];
+                };
+            };
+        };
+    };
+    v1_notifications_inapp_read_all_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InAppReadAll"];
+                };
+            };
+        };
+    };
+    v1_notifications_inapp_summary_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InAppSummary"];
                 };
             };
         };
@@ -7446,6 +7569,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicStats"];
+                };
+            };
+        };
+    };
+    v1_search_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Au moins 2 caractères. */
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchResponse"];
                 };
             };
         };

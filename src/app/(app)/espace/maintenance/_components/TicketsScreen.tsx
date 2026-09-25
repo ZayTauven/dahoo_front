@@ -11,6 +11,7 @@ import { SelectField } from "@/components/app/ui/fields";
 import { ListToolbar } from "@/components/app/ui/ListToolbar";
 import { StatusBadge } from "@/components/app/ui/StatusBadge";
 import { useListParams } from "@/hooks/useListParams";
+import { useNewParam } from "@/hooks/useNewParam";
 import { api } from "@/lib/api/client";
 import { unwrap } from "@/lib/api/errors";
 import { useSession } from "@/lib/auth/useSession";
@@ -41,6 +42,7 @@ export function TicketsScreen() {
   const { can, isReadOnly } = useSession();
   const list = useListParams(FILTERS);
   const [creating, setCreating] = useState(false);
+  const shortcut = useNewParam();
   const categories = useCategories();
 
   // Filtres communs à la liste et aux compteurs (le statut est appliqué séparément).
@@ -215,7 +217,15 @@ export function TicketsScreen() {
         </div>
       </section>
 
-      {creating && <TicketFormModal ticket={null} onClose={() => setCreating(false)} />}
+      {(creating || (shortcut.requested && canCreate)) && (
+        <TicketFormModal
+          ticket={null}
+          onClose={() => {
+            setCreating(false);
+            shortcut.clear();
+          }}
+        />
+      )}
     </>
   );
 }

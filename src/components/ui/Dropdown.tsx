@@ -24,8 +24,8 @@ interface DropdownProps {
       onClick: () => void;
     };
   }) => ReactNode;
-  /** Render the panel body (the .ax-dropdown content). */
-  children: ReactNode;
+  /** Render the panel body (the .ax-dropdown content). Dahoo : une fonction reçoit `close` (fermer après une action). */
+  children: ReactNode | ((close: () => void) => ReactNode);
   /** Class on the panel element. */
   panelClassName?: string;
   /** role of the panel: menu (default) or dialog. */
@@ -47,6 +47,7 @@ export function Dropdown({
   useClickOutside(wrap, open, () => setOpen(false));
 
   const toggle = () => setOpen((o) => !o);
+  const close = () => setOpen(false);
 
   return (
     <div className={className} ref={wrap}>
@@ -67,7 +68,7 @@ export function Dropdown({
           role={panelRole}
           aria-label={panelAriaLabel}
         >
-          {children}
+          {typeof children === 'function' ? children(close) : children}
         </div>
       )}
     </div>

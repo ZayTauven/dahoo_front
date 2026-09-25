@@ -11,6 +11,7 @@ import { DataTable, type Column } from "@/components/app/ui/DataTable";
 import { SelectField, TextField } from "@/components/app/ui/fields";
 import { ListToolbar } from "@/components/app/ui/ListToolbar";
 import { useListParams } from "@/hooks/useListParams";
+import { useNewParam } from "@/hooks/useNewParam";
 import { api } from "@/lib/api/client";
 import { unwrap } from "@/lib/api/errors";
 import { useSession } from "@/lib/auth/useSession";
@@ -34,6 +35,7 @@ export function PaymentsScreen() {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
+  const shortcut = useNewParam();
   const list = useListParams([
     "payment_method",
     "payment_date_after",
@@ -286,16 +288,11 @@ export function PaymentsScreen() {
       </section>
 
       {/* `?nouveau=1` (raccourci du tableau de bord) ouvre directement la saisie, dès que les droits sont connus. */}
-      {(recording || (params.get("nouveau") === "1" && canRecord)) && (
+      {(recording || (shortcut.requested && canRecord)) && (
         <RecordPaymentModal
           onClose={() => {
             setRecording(false);
-            if (params.has("nouveau")) {
-              const next = new URLSearchParams(params.toString());
-              next.delete("nouveau");
-              const rest = next.toString();
-              router.replace(rest ? `${pathname}?${rest}` : pathname, { scroll: false });
-            }
+            shortcut.clear();
           }}
         />
       )}

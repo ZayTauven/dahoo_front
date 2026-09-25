@@ -11,6 +11,7 @@ import { TextareaField, TextField } from "@/components/app/ui/fields";
 import { ListToolbar } from "@/components/app/ui/ListToolbar";
 import { ConfirmDialog, FormModal } from "@/components/app/ui/Modal";
 import { useListParams } from "@/hooks/useListParams";
+import { useNewParam } from "@/hooks/useNewParam";
 import { api } from "@/lib/api/client";
 import { unwrap } from "@/lib/api/errors";
 import type { Schema } from "@/lib/api/types";
@@ -33,6 +34,7 @@ export function TenantsScreen() {
   const { can, isReadOnly } = useSession();
   const list = useListParams([] as const);
   const [editing, setEditing] = useState<Tenant | "new" | null>(null);
+  const shortcut = useNewParam();
   const [deleting, setDeleting] = useState<Tenant | null>(null);
 
   const tenants = useQuery({
@@ -126,7 +128,15 @@ export function TenantsScreen() {
         </div>
       </section>
 
-      {editing && <TenantFormModal tenant={editing === "new" ? null : editing} onClose={() => setEditing(null)} />}
+      {(editing || (shortcut.requested && can("tenant.create") && canWrite)) && (
+        <TenantFormModal
+          tenant={editing && editing !== "new" ? editing : null}
+          onClose={() => {
+            setEditing(null);
+            shortcut.clear();
+          }}
+        />
+      )}
 
       <ConfirmDialog
         open={Boolean(deleting)}

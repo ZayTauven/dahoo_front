@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 
+import { CommandPalette } from "@/components/app/command/CommandPalette";
 import { Customizer } from "@/components/app/customizer/Customizer";
 import { UiThemeProvider } from "@/components/app/customizer/UiThemeProvider";
 import { ToastProvider } from "@/components/app/ui/Toast";
@@ -23,6 +24,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { toggleCollapsed } = useTheme();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [commandOpen, setCommandOpen] = useState(false);
 
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
@@ -48,6 +50,23 @@ export function AppShell({ children }: { children: ReactNode }) {
     setDrawerPath(pathname);
     setDrawerOpen(false);
   }
+  // Palette de commandes : Ctrl+K (⌘K sur Mac), ou « / » hors d'un champ de saisie.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const typing = target?.closest("input, textarea, select, [contenteditable='true']");
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setCommandOpen((open) => !open);
+      } else if (event.key === "/" && !typing && !event.ctrlKey && !event.metaKey && !event.altKey) {
+        event.preventDefault();
+        setCommandOpen(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   useEffect(() => {
     if (!drawerOpen) return;
     const onKey = (event: KeyboardEvent) => event.key === "Escape" && closeDrawer();
@@ -70,7 +89,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <button type="button" className="ax-backdrop" aria-label="Fermer le menu" onClick={closeDrawer} />
           )}
           <div className="ax-shell">
-            <Header onMenu={onMenu} />
+            <Header onMenu={onMenu} onCommand={() => setCommandOpen(true)} />
             <main className="ax-main" id="contenu">
               <AccessBanner />
               {children}
@@ -79,6 +98,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
         {/* Hors de l'en-tête : son backdrop-filter piégerait le tiroir en position fixe. */}
         <Customizer />
+        <CommandPalette open={commandOpen} onClose={() => setCommandOpen(false)} />
       </UiThemeProvider>
     </ToastProvider>
   );

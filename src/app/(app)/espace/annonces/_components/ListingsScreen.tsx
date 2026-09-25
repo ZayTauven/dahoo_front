@@ -50,9 +50,10 @@ export function ListingsScreen() {
 
   const closeCreate = () => {
     setCreating(false);
-    if (searchParams.has("lot")) {
+    if (searchParams.has("lot") || searchParams.has("nouveau")) {
       const next = new URLSearchParams(searchParams.toString());
       next.delete("lot");
+      next.delete("nouveau");
       const rest = next.toString();
       router.replace(rest ? `/espace/annonces?${rest}` : "/espace/annonces", { scroll: false });
     }
@@ -186,7 +187,8 @@ export function ListingsScreen() {
         </div>
       </section>
 
-      {creating && canCreate && (
+      {/* `?nouveau=1` (palette de commandes) ouvre aussi la création. */}
+      {(creating || searchParams.get("nouveau") === "1") && canCreate && (
         <ListingFormModal
           listing={null}
           initialUnit={lotFromUrl}

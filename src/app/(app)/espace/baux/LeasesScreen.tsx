@@ -11,6 +11,7 @@ import { SelectField } from "@/components/app/ui/fields";
 import { ListToolbar } from "@/components/app/ui/ListToolbar";
 import { StatusBadge } from "@/components/app/ui/StatusBadge";
 import { useListParams } from "@/hooks/useListParams";
+import { useNewParam } from "@/hooks/useNewParam";
 import { api } from "@/lib/api/client";
 import { unwrap } from "@/lib/api/errors";
 import { useSession } from "@/lib/auth/useSession";
@@ -24,6 +25,7 @@ export function LeasesScreen() {
   const { can, isReadOnly } = useSession();
   const list = useListParams(["status", "tenant", "unit"] as const);
   const [creating, setCreating] = useState(false);
+  const shortcut = useNewParam();
 
   const query = {
     page: list.page > 1 ? list.page : undefined,
@@ -162,7 +164,14 @@ export function LeasesScreen() {
         </div>
       </section>
 
-      {creating && <LeaseFormModal onClose={() => setCreating(false)} />}
+      {(creating || (shortcut.requested && can("lease.create") && !isReadOnly)) && (
+        <LeaseFormModal
+          onClose={() => {
+            setCreating(false);
+            shortcut.clear();
+          }}
+        />
+      )}
     </>
   );
 }

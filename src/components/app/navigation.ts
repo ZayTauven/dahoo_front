@@ -73,12 +73,15 @@ export const NAVIGATION: NavSection[] = [
   },
 ];
 
+/** Accueils d'espace : actifs seulement sur leur propre page (pas sur /espace/notifications). */
+const ROOTS = new Set(["/espace", "/plateforme"]);
+
 /** Entrée active : la plus longue correspondance de préfixe (évite que /espace reste actif partout). */
 export function activeHref(pathname: string, sections: NavSection[]): string | undefined {
   let best: string | undefined;
   for (const section of sections) {
     for (const item of section.items) {
-      const matches = pathname === item.href || pathname.startsWith(`${item.href}/`);
+      const matches = pathname === item.href || (!ROOTS.has(item.href) && pathname.startsWith(`${item.href}/`));
       if (matches && (!best || item.href.length > best.length)) best = item.href;
     }
   }
