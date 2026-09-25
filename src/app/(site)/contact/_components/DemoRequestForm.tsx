@@ -1,9 +1,8 @@
 "use client";
 
-import { IconAlertTriangle, IconCircleCheck, IconSend } from "@tabler/icons-react";
 import { useActionState, useEffect, useRef } from "react";
 
-import { SelectField, TextareaField, TextField } from "@/components/app/ui/fields";
+import { FormAlert, Honeypot, SiteSelectField, SiteTextareaField, SiteTextField, SubmitButton } from "@/components/site/form";
 
 import { requestDemo } from "./actions";
 import { INITIAL_DEMO_STATE, UNITS_RANGES, type DemoField } from "./demo-request";
@@ -26,14 +25,16 @@ export function DemoRequestForm() {
 
   if (state.status === "success") {
     return (
-      <div className="flex flex-col items-start gap-4 py-4" role="status">
-        <span className="bg-accent-wash text-accent-text inline-flex size-14 items-center justify-center rounded-full">
-          <IconCircleCheck size={30} stroke={1.75} aria-hidden="true" />
-        </span>
-        <h3 ref={successRef} tabIndex={-1} className="font-display text-text-strong m-0 text-2xl font-semibold outline-none">
+      <div className="border-border-default flex flex-col items-start gap-6 border-t pt-8" role="status">
+        <p className="site-label text-accent-text m-0">Demande envoyée</p>
+        <h3
+          ref={successRef}
+          tabIndex={-1}
+          className="font-display text-text-strong m-0 text-5xl leading-[1.02] font-normal tracking-tight outline-none sm:text-6xl"
+        >
           Merci{state.contactName ? `, ${state.contactName}` : ""} !
         </h3>
-        <p className="text-text-muted m-0 leading-relaxed">
+        <p className="text-text-muted m-0 max-w-lg text-base leading-relaxed sm:text-lg">
           Votre demande de démonstration est bien enregistrée. L&apos;équipe Dahoo vous recontacte pour convenir d&apos;un
           rendez-vous et vous présenter l&apos;outil avec les biens de votre agence.
         </p>
@@ -45,19 +46,21 @@ export function DemoRequestForm() {
   const values = state.status === "error" ? state.values : undefined;
 
   return (
-    <form ref={formRef} action={formAction} noValidate aria-busy={pending} className="flex flex-col gap-5">
+    <form
+      ref={formRef}
+      action={formAction}
+      noValidate
+      aria-busy={pending}
+      className="relative flex flex-col gap-8"
+    >
       {state.status === "error" && (
-        <div ref={alertRef} tabIndex={-1} role="alert" className="ax-alert ax-alert--danger outline-none">
-          <IconAlertTriangle className="ax-alert__icon" stroke={1.75} aria-hidden="true" />
-          <div className="ax-alert__content">
-            <p className="ax-alert__title">La demande n&apos;a pas été envoyée</p>
-            <p className="ax-alert__message">{state.message}</p>
-          </div>
-        </div>
+        <FormAlert ref={alertRef} title="La demande n'a pas été envoyée">
+          {state.message}
+        </FormAlert>
       )}
 
-      <div className="grid gap-5 sm:grid-cols-2">
-        <TextField
+      <div className="grid gap-x-8 gap-y-7 sm:grid-cols-2">
+        <SiteTextField
           label="Nom de l'agence"
           name="agency_name"
           required
@@ -66,7 +69,7 @@ export function DemoRequestForm() {
           defaultValue={values?.agency_name}
           error={errors.agency_name}
         />
-        <TextField
+        <SiteTextField
           label="Votre nom"
           name="contact_name"
           required
@@ -75,7 +78,7 @@ export function DemoRequestForm() {
           defaultValue={values?.contact_name}
           error={errors.contact_name}
         />
-        <TextField
+        <SiteTextField
           label="Téléphone"
           name="phone"
           type="tel"
@@ -87,7 +90,7 @@ export function DemoRequestForm() {
           defaultValue={values?.phone}
           error={errors.phone}
         />
-        <TextField
+        <SiteTextField
           label="E-mail"
           name="email"
           type="email"
@@ -97,7 +100,7 @@ export function DemoRequestForm() {
           error={errors.email}
           hint="Facultatif"
         />
-        <TextField
+        <SiteTextField
           label="Ville"
           name="city"
           autoComplete="address-level2"
@@ -107,7 +110,7 @@ export function DemoRequestForm() {
           error={errors.city}
           hint="Facultatif"
         />
-        <SelectField
+        <SiteSelectField
           label="Nombre de lots gérés"
           name="units_range"
           required
@@ -118,7 +121,7 @@ export function DemoRequestForm() {
         />
       </div>
 
-      <TextareaField
+      <SiteTextareaField
         label="Votre message"
         name="message"
         rows={4}
@@ -128,25 +131,15 @@ export function DemoRequestForm() {
         hint="Facultatif : vos besoins, vos outils actuels, vos disponibilités."
       />
 
-      {/* Champ piège pour les robots : invisible et ignoré par les technologies d'assistance. */}
-      <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
-        <label htmlFor="site_web">Ne pas remplir ce champ</label>
-        <input id="site_web" name="site_web" type="text" tabIndex={-1} autoComplete="off" />
-      </div>
+      <Honeypot name="site_web" />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-text-muted m-0 text-xs">
+      <div className="border-border-default flex flex-col gap-5 border-t pt-6 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-text-muted m-0 max-w-sm text-xs leading-relaxed">
           <span aria-hidden="true">* </span>Champs obligatoires. Vos coordonnées servent uniquement à vous recontacter au sujet de Dahoo.
         </p>
-        <button
-          type="submit"
-          className={`ax-btn ax-btn--primary ax-btn--lg shrink-0${pending ? " is-loading" : ""}`}
-          disabled={pending}
-        >
-          {pending && <span className="ax-btn__spinner" aria-hidden="true" />}
-          <IconSend className="ax-btn__icon" stroke={2} aria-hidden="true" />
-          <span className="ax-btn__label">{pending ? "Envoi en cours…" : "Demander une démo"}</span>
-        </button>
+        <SubmitButton pending={pending} className="shrink-0 self-start sm:self-auto">
+          Demander une démo
+        </SubmitButton>
       </div>
     </form>
   );

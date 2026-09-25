@@ -1,29 +1,50 @@
+import Image from "next/image";
+
 import { cn } from "@/lib/utils";
 
 import { agencyInitials } from "./agency";
 
-/** Trois déclinaisons de la charte, attribuées de façon stable selon l'identifiant de l'agence. */
-const TONES = [
-  "bg-brand-600 text-white",
-  "bg-accent text-on-accent",
-  "bg-brand-100 text-brand-800",
-] as const;
-
 /**
- * Pastille aux initiales de l'agence : l'API publique ne fournit pas (encore) de logo.
- * Décorative : le nom de l'agence est toujours écrit à côté.
+ * Marque typographique d'une agence sans logo : ses initiales en serif dans un carré papier à filet
+ * fin, comme un ex-libris. Décorative : le nom est toujours écrit à côté.
  */
-export function AgencyMonogram({ id, name, className }: { id: number; name: string; className?: string }) {
+export function AgencyMonogram({ name, className }: { name: string; className?: string }) {
   return (
     <span
       aria-hidden="true"
       className={cn(
-        "font-display inline-flex shrink-0 items-center justify-center rounded-full font-bold tracking-wide select-none",
-        TONES[id % TONES.length],
+        "font-display border-border-strong bg-surface-solid text-text-strong inline-flex shrink-0 items-center justify-center rounded-sm border leading-none tracking-tight select-none",
         className,
       )}
     >
       {agencyInitials(name)}
+    </span>
+  );
+}
+
+/**
+ * Identité visuelle d'une agence : son logo (carré, fourni par l'API) ou, à défaut, son monogramme.
+ * Décorative dans les deux cas (`alt=""`) : le nom de l'agence est toujours écrit à côté.
+ * `className` fixe la taille (et la taille du texte du monogramme).
+ */
+export function AgencyMark({
+  name,
+  logo,
+  className,
+  sizes = "96px",
+}: {
+  name: string;
+  logo: string | null;
+  className?: string;
+  sizes?: string;
+}) {
+  if (!logo) return <AgencyMonogram name={name} className={className} />;
+  return (
+    <span
+      aria-hidden="true"
+      className={cn("border-border-default bg-surface-solid relative inline-block shrink-0 overflow-hidden rounded-sm border", className)}
+    >
+      <Image src={logo} alt="" fill sizes={sizes} className="object-cover" />
     </span>
   );
 }

@@ -88,7 +88,7 @@
    ════════════════════════════════════════════════════════════════════════ */
 [data-ax-sidebar='brand'] .ax-sidebar {
   --ax-sidebar-bg: var(--ax-accent);
-  --ax-sidebar-fg: color-mix(in oklab, var(--ax-on-accent) 78%, transparent);
+  --ax-sidebar-fg: color-mix(in oklab, var(--ax-on-accent) 90%, transparent);
   --ax-sidebar-fg-strong: var(--ax-on-accent);
   --ax-sidebar-border: color-mix(in oklab, var(--ax-on-accent) 16%, transparent);
   --ax-sidebar-hover: color-mix(in oklab, var(--ax-on-accent) 12%, transparent);
@@ -99,7 +99,7 @@
 }
 [data-ax-header='brand'] .ax-header {
   --ax-header-bg: var(--ax-accent);
-  --ax-header-fg: color-mix(in oklab, var(--ax-on-accent) 78%, transparent);
+  --ax-header-fg: color-mix(in oklab, var(--ax-on-accent) 90%, transparent);
   --ax-header-fg-strong: var(--ax-on-accent);
   --ax-header-border: color-mix(in oklab, var(--ax-on-accent) 16%, transparent);
   --ax-header-hover: color-mix(in oklab, var(--ax-on-accent) 12%, transparent);
@@ -113,33 +113,34 @@
 }
 
 /* ════════════════════════════════════════════════════════════════════════
-   3 · GRADIENT chrome — vertical accent gradient (accent-600 → accent-800),
-   also derives from the active preset's ramp.
+   3 · GRADIENT chrome — vertical accent gradient. Dahoo : la plage de la rampe et l'encre
+   (--ax-gradient-from/-to, --ax-on-gradient) sont choisies par preset pour rester AA sur toute la
+   plage, en clair comme en sombre (Vireo posait --ax-on-accent sur 600 → 800, illisible en sombre).
    ════════════════════════════════════════════════════════════════════════ */
 [data-ax-sidebar='gradient'] .ax-sidebar {
-  --ax-sidebar-bg: linear-gradient(180deg, var(--ax-accent-600), var(--ax-accent-800));
-  --ax-sidebar-fg: color-mix(in oklab, var(--ax-on-accent) 80%, transparent);
-  --ax-sidebar-fg-strong: var(--ax-on-accent);
-  --ax-sidebar-border: color-mix(in oklab, var(--ax-on-accent) 14%, transparent);
-  --ax-sidebar-hover: color-mix(in oklab, var(--ax-on-accent) 12%, transparent);
-  --ax-sidebar-active-bg: color-mix(in oklab, var(--ax-on-accent) 20%, transparent);
-  color: var(--ax-on-accent);
+  --ax-sidebar-bg: linear-gradient(180deg, var(--ax-gradient-from), var(--ax-gradient-to));
+  --ax-sidebar-fg: color-mix(in oklab, var(--ax-on-gradient) 90%, transparent);
+  --ax-sidebar-fg-strong: var(--ax-on-gradient);
+  --ax-sidebar-border: color-mix(in oklab, var(--ax-on-gradient) 14%, transparent);
+  --ax-sidebar-hover: color-mix(in oklab, var(--ax-on-gradient) 12%, transparent);
+  --ax-sidebar-active-bg: color-mix(in oklab, var(--ax-on-gradient) 20%, transparent);
+  color: var(--ax-on-gradient);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
 [data-ax-header='gradient'] .ax-header {
-  --ax-header-bg: linear-gradient(90deg, var(--ax-accent-600), var(--ax-accent-800));
-  --ax-header-fg: color-mix(in oklab, var(--ax-on-accent) 80%, transparent);
-  --ax-header-fg-strong: var(--ax-on-accent);
-  --ax-header-border: color-mix(in oklab, var(--ax-on-accent) 14%, transparent);
-  --ax-header-hover: color-mix(in oklab, var(--ax-on-accent) 12%, transparent);
-  color: var(--ax-on-accent);
+  --ax-header-bg: linear-gradient(90deg, var(--ax-gradient-from), var(--ax-gradient-to));
+  --ax-header-fg: color-mix(in oklab, var(--ax-on-gradient) 90%, transparent);
+  --ax-header-fg-strong: var(--ax-on-gradient);
+  --ax-header-border: color-mix(in oklab, var(--ax-on-gradient) 14%, transparent);
+  --ax-header-hover: color-mix(in oklab, var(--ax-on-gradient) 12%, transparent);
+  color: var(--ax-on-gradient);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
 [data-ax-sidebar='gradient'] .ax-sidebar__wordmark,
 [data-ax-sidebar='gradient'] .ax-sidebar__logo {
-  color: var(--ax-on-accent);
+  color: var(--ax-on-gradient);
 }
 
 /* ════════════════════════════════════════════════════════════════════════

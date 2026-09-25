@@ -29,12 +29,15 @@
 /* ── Compléments Dahoo (en dernier dans la couche des composants) ── */
 @import './dahoo.css' layer(components);
 
+/* ── Site public : langage « sable & encre », limité à .site ── */
+@import './site.css' layer(components);
+
 /*
  * Tailwind v4 @theme bridge — exposes --ax-* role/scale tokens as Tailwind
  * utilities (bg-surface, text-strong, rounded-xl, font-display, shadow-card…)
  * and wires --ax-bp-* to Tailwind breakpoints. Values are late-bound via var().
  */
-@theme {
+@theme inline {
   /* breakpoints (spec 01 §6.3) */
   --breakpoint-sm: 576px;
   --breakpoint-md: 768px;

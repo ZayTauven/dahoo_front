@@ -1,55 +1,30 @@
-import {
-  IconArrowRight,
-  IconBuildingCommunity,
-  IconFileCertificate,
-  IconReportMoney,
-  IconTools,
-  IconWorldUpload,
-  type Icon,
-} from "@tabler/icons-react";
+import { IconArrowRight } from "@tabler/icons-react";
+import Image from "next/image";
 import Link from "next/link";
 
 import { Container, Section } from "@/components/site/layout";
-import { Highlight, Reveal } from "@/components/site/motion";
+import { Highlight, Parallax, Reveal } from "@/components/site/motion";
 import { SectionHeading } from "@/components/site/SectionHeading";
 
-const FEATURES: { icon: Icon; title: string; text: string }[] = [
-  {
-    icon: IconBuildingCommunity,
-    title: "Biens et lots",
-    text: "Immeubles, appartements, locaux : tout votre parc au même endroit.",
-  },
-  {
-    icon: IconFileCertificate,
-    title: "Baux et locataires",
-    text: "Contrats, dossiers et échéances de fin de bail suivis sans tableur.",
-  },
-  {
-    icon: IconReportMoney,
-    title: "Loyers encaissés",
-    text: "Échéances suivies, paiements saisis, impayés repérés tout de suite.",
-  },
-  {
-    icon: IconTools,
-    title: "Maintenance",
-    text: "Demandes d'intervention suivies du signalement à la clôture.",
-  },
-  {
-    icon: IconWorldUpload,
-    title: "Annonces publiées ici",
-    text: "Vos biens libres apparaissent sur ce portail en un clic.",
-  },
+const MODULES = ["Biens et lots", "Baux et locataires", "Échéances", "Paiements", "Maintenance", "Annonces"];
+
+const PAYMENTS = [
+  { src: "/images/site/logos/wave.png", name: "Wave" },
+  { src: "/images/site/logos/orange-money.png", name: "Orange Money" },
 ];
 
-/** Bloc « Vous êtes une agence ? » : le logiciel Dahoo, sur fond indigo. */
+/**
+ * Bloc « Vous êtes une agence ? » : après l'immobilier, le logiciel. On montre de vraies captures de
+ * l'espace agence (données de démonstration) plutôt que de décrire les fonctions.
+ */
 export function AgencyCta() {
   return (
     <Section tone="brand" labelledBy="accueil-agences" className="overflow-hidden">
-      <Container className="grid items-center gap-12 lg:grid-cols-[5fr_7fr] lg:gap-16">
-        <Reveal className="flex flex-col gap-8">
+      <Container className="grid items-center gap-14 lg:grid-cols-12 lg:gap-8">
+        <Reveal className="flex flex-col gap-8 lg:col-span-5">
           <SectionHeading
             id="accueil-agences"
-            invert
+            index="05"
             eyebrow="Vous êtes une agence immobilière ?"
             title={
               <>
@@ -57,44 +32,66 @@ export function AgencyCta() {
               </>
             }
           >
-            <p className="m-0">
-              Le logiciel de gestion locative pensé pour les agences au Sénégal : vos biens, vos baux, vos loyers et
-              vos interventions dans un seul outil, et vos annonces publiées sur le portail en quelques clics.
-            </p>
+            <p className="m-0">Vos biens, vos baux et vos loyers dans un seul outil, et vos annonces publiées ici en un clic.</p>
           </SectionHeading>
 
-          <div className="flex flex-wrap gap-3">
+          <ul className="m-0 flex list-none flex-wrap gap-2 p-0" aria-label="Modules du logiciel">
+            {MODULES.map((module) => (
+              <li key={module} className="border-border-strong text-text-strong rounded-full border px-3.5 py-1.5 text-sm">
+                {module}
+              </li>
+            ))}
+          </ul>
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <p className="site-label text-text-muted m-0">Paiements enregistrés</p>
+            <ul className="m-0 flex list-none flex-wrap items-center gap-2 p-0">
+              {PAYMENTS.map((payment) => (
+                <li key={payment.name} className="flex items-center gap-2 rounded-full bg-white py-1 pr-3.5 pl-1">
+                  <Image src={payment.src} alt="" width={28} height={28} className="size-7 rounded-full object-cover" />
+                  <span className="text-brand-900 text-sm font-medium whitespace-nowrap">{payment.name}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
             <Link href="/pour-les-agences#demo" className="ax-btn ax-btn--primary ax-btn--lg">
               <span className="ax-btn__label">Demander une démo</span>
             </Link>
-            <Link
-              href="/tarifs"
-              className="ax-btn ax-btn--lg border border-white/40 bg-transparent text-white hover:bg-white/10"
-            >
-              <span className="ax-btn__label">Voir les tarifs</span>
-              <IconArrowRight className="ax-btn__icon" stroke={2} aria-hidden="true" />
+            <Link href="/pour-les-agences" className="site-link text-text-strong inline-flex items-center gap-2 font-medium">
+              Découvrir le logiciel <IconArrowRight size={18} stroke={1.75} aria-hidden="true" />
             </Link>
           </div>
         </Reveal>
 
-        <ul className="m-0 grid list-none gap-4 p-0 sm:grid-cols-2">
-          {FEATURES.map(({ icon: Icon, title, text }, index) => (
-            <Reveal
-              as="li"
-              key={title}
-              delay={index * 0.06}
-              className="flex gap-4 rounded-xl border border-white/10 bg-white/5 p-5 sm:last:col-span-2"
-            >
-              <span className="bg-accent text-on-accent flex size-11 shrink-0 items-center justify-center rounded-lg">
-                <Icon size={22} stroke={1.75} aria-hidden="true" />
-              </span>
-              <div className="flex flex-col gap-1">
-                <h3 className="font-display m-0 text-base font-semibold text-white">{title}</h3>
-                <p className="m-0 text-sm leading-relaxed text-white/75">{text}</p>
-              </div>
-            </Reveal>
-          ))}
-        </ul>
+        {/* Captures réelles, en profondeur : la seconde glisse plus vite que la première. */}
+        <div className="relative lg:col-span-7">
+          <Parallax distance={24}>
+            <div className="border-border-strong overflow-hidden rounded-lg border shadow-[0_40px_80px_-30px_rgba(0,0,0,0.55)] lg:mr-16">
+              <Image
+                src="/images/site/app/tableau-de-bord.webp"
+                alt="Espace agence Dahoo : le tableau de bord, avec les loyers encaissés du mois, le recouvrement, les impayés et l'occupation"
+                width={2880}
+                height={1800}
+                sizes="(min-width: 992px) 55vw, 100vw"
+                className="block h-auto w-full"
+              />
+            </div>
+          </Parallax>
+          <Parallax distance={70} className="absolute -bottom-10 -left-4 w-[58%] sm:-left-8 lg:-bottom-16 lg:-left-12">
+            <div className="border-border-strong overflow-hidden rounded-lg border shadow-[0_40px_80px_-30px_rgba(0,0,0,0.6)]">
+              <Image
+                src="/images/site/app/annonces.webp"
+                alt="Espace agence Dahoo : la liste des annonces publiées sur le portail, avec leurs photos"
+                width={2880}
+                height={1800}
+                sizes="(min-width: 992px) 32vw, 58vw"
+                className="block h-auto w-full"
+              />
+            </div>
+          </Parallax>
+        </div>
       </Container>
     </Section>
   );

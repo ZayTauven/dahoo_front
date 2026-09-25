@@ -1,4 +1,4 @@
-import { IconBath, IconBed, IconMapPin, IconPhoto, IconRuler2 } from "@tabler/icons-react";
+import { IconArrowUpRight } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -23,83 +23,86 @@ export function listingPrice(listing: Pick<ListingCardData, "listing_type" | "pr
   return listing.listing_type === "RENT" ? `${formatMoney(listing.price)} / mois` : formatMoney(listing.price);
 }
 
-/** Carte d'annonce du portail (reprend la carte « property » de Crafto). */
-export function PropertyCard({ listing, preload = false }: { listing: ListingCardData; preload?: boolean }) {
+/** Caractéristiques courtes (« 3 ch. · 2 sdb · 95 m² »). */
+function specs(listing: ListingCardData): string[] {
+  const items: string[] = [];
+  if (listing.bedrooms != null) items.push(`${listing.bedrooms} ch.`);
+  if (listing.bathrooms != null) items.push(`${listing.bathrooms} sdb`);
+  if (listing.surface != null) items.push(`${listing.surface} m²`);
+  return items;
+}
+
+/**
+ * Carte d'annonce du portail, en mise en page de magazine : photo sans cadre, lieu en étiquette,
+ * titre en serif, caractéristiques et prix sur un filet. Toute la carte est cliquable.
+ * `size="feature"` agrandit la photo et le titre (annonce mise en avant).
+ */
+export function PropertyCard({
+  listing,
+  preload = false,
+  size = "default",
+  className,
+}: {
+  listing: ListingCardData;
+  preload?: boolean;
+  size?: "default" | "feature";
+  className?: string;
+}) {
   const isRent = listing.listing_type === "RENT";
   const place = [listing.neighborhood, listing.city].filter(Boolean).join(", ");
   const href = `/annonces/${listing.id}`;
+  const feature = size === "feature";
+  const details = specs(listing);
 
   return (
-    <article className="bg-surface-solid border-border-default group relative flex h-full flex-col overflow-hidden rounded-xl border shadow-[0_18px_40px_-28px_rgba(20,27,71,0.35)] transition-transform duration-300 hover:-translate-y-1">
-      <Link href={href} className="relative block aspect-[600/415] overflow-hidden" tabIndex={-1} aria-hidden="true">
+    <article className={cn("group relative flex flex-col gap-5", className)}>
+      <div
+        className={cn(
+          "bg-surface-subtle relative overflow-hidden rounded-md",
+          feature ? "aspect-[4/5] sm:aspect-[16/10] lg:aspect-[5/4]" : "aspect-[4/5]",
+        )}
+      >
         {listing.cover ? (
           <Image
             src={listing.cover}
             alt=""
             fill
             preload={preload}
-            sizes="(min-width: 1200px) 380px, (min-width: 640px) 50vw, 100vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            sizes={feature ? "(min-width: 992px) 55vw, 100vw" : "(min-width: 1200px) 420px, (min-width: 640px) 50vw, 100vw"}
+            className="object-cover transition-transform duration-[1.4s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
           />
         ) : (
-          <span className="bg-surface-subtle text-text-subtle flex h-full items-center justify-center">
-            <IconPhoto size={40} stroke={1.25} />
+          // Pas encore de photo : hachures fines et mention en italique, lisibles sur tous les fonds.
+          <span className="border-border-strong text-text-muted font-display flex h-full items-center justify-center rounded-md border bg-[repeating-linear-gradient(135deg,transparent_0_14px,var(--ax-border)_14px_15px)] p-8 text-center text-3xl italic">
+            Photos à venir
           </span>
         )}
-        <span
-          className={cn(
-            "absolute top-4 left-4 rounded-full px-3 py-1 text-xs font-bold tracking-wide uppercase",
-            isRent ? "bg-accent text-on-accent" : "bg-brand text-on-brand",
-          )}
-        >
+        <span className="site-label bg-surface-solid text-text-strong absolute top-4 left-4 rounded-full px-3 py-1.5">
           {isRent ? "À louer" : "À vendre"}
         </span>
-      </Link>
+        <span
+          aria-hidden="true"
+          className="bg-accent text-on-accent absolute right-4 bottom-4 flex size-12 scale-50 items-center justify-center rounded-full opacity-0 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-100 group-hover:opacity-100"
+        >
+          <IconArrowUpRight size={22} stroke={1.75} />
+        </span>
+      </div>
 
-      <div className="flex flex-1 flex-col gap-4 p-6">
-        <div className="flex flex-col gap-1">
-          <h3 className="font-display text-text-strong m-0 text-lg leading-snug font-semibold">
-            <Link href={href} className="text-inherit no-underline after:absolute after:inset-0 hover:underline">
-              {listing.title}
-            </Link>
-          </h3>
-          {place && (
-            <p className="text-text-muted m-0 flex items-center gap-1 text-sm">
-              <IconMapPin size={16} stroke={1.75} aria-hidden="true" /> {place}
-            </p>
+      <div className="flex flex-col gap-3">
+        {place && <p className="site-label text-text-muted m-0">{place}</p>}
+        <h3
+          className={cn(
+            "font-display text-text-strong m-0 leading-[1.05] font-normal tracking-[-0.015em] text-balance",
+            feature ? "text-3xl sm:text-4xl" : "text-[1.7rem]",
           )}
-        </div>
-
-        <ul className="text-text-muted m-0 flex list-none flex-wrap gap-x-5 gap-y-2 p-0 text-sm">
-          {listing.bedrooms != null && (
-            <li className="flex items-center gap-1.5">
-              <IconBed size={18} stroke={1.5} aria-hidden="true" />
-              <span>
-                <b className="text-text-strong">{listing.bedrooms}</b> ch.
-              </span>
-            </li>
-          )}
-          {listing.bathrooms != null && (
-            <li className="flex items-center gap-1.5">
-              <IconBath size={18} stroke={1.5} aria-hidden="true" />
-              <span>
-                <b className="text-text-strong">{listing.bathrooms}</b> sdb
-              </span>
-            </li>
-          )}
-          {listing.surface != null && (
-            <li className="flex items-center gap-1.5">
-              <IconRuler2 size={18} stroke={1.5} aria-hidden="true" />
-              <span>
-                <b className="text-text-strong">{listing.surface}</b> m²
-              </span>
-            </li>
-          )}
-        </ul>
-
-        <div className="border-border-default mt-auto flex items-center justify-between gap-3 border-t pt-4">
-          <span className="text-text-muted text-xs font-semibold tracking-wide uppercase">Voir le bien</span>
-          <span className="font-display text-text-strong text-lg font-bold">{listingPrice(listing)}</span>
+        >
+          <Link href={href} className="text-inherit no-underline after:absolute after:inset-0">
+            {listing.title}
+          </Link>
+        </h3>
+        <div className="border-border-default flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-t pt-3">
+          <span className="text-text-muted font-mono text-[0.8rem]">{details.length > 0 ? details.join(" · ") : "—"}</span>
+          <span className="text-text-strong text-[0.95rem] font-medium tabular-nums">{listingPrice(listing)}</span>
         </div>
       </div>
     </article>

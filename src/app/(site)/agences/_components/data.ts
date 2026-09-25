@@ -15,10 +15,16 @@ export const LISTINGS_PAGE_SIZE = 9;
 
 export type ListingTypeFilter = "RENT" | "SALE";
 
-export async function getAgencies(page: number): Promise<Schema<"PaginatedPublicAgencyList"> | "page-not-found" | null> {
+/** Taille de page maximale acceptée par l'API publique (lecture de tout l'annuaire pour le filtre par ville). */
+export const AGENCIES_MAX_PAGE_SIZE = 50;
+
+export async function getAgencies(
+  page: number,
+  pageSize: number = AGENCIES_PAGE_SIZE,
+): Promise<Schema<"PaginatedPublicAgencyList"> | "page-not-found" | null> {
   try {
     const { data, response } = await publicApi.GET("/api/v1/public/agencies/", {
-      params: { query: { page, page_size: AGENCIES_PAGE_SIZE } },
+      params: { query: { page, page_size: pageSize } },
     });
     if (response.status === 404) return "page-not-found";
     return data ?? null;
@@ -53,3 +59,21 @@ export async function getAgencyListings(
     return null;
   }
 }
+
+export type AgencyListing = Schema<"PublicListing">;
+
+/**
+ * Vitrine d'une agence : ses dernières annonces publiques qui ont une photo de couverture (mosaïques de
+ * l'annuaire et de la fiche). Un appel par agence, mis en cache 60 s et lancé en parallèle par les pages ;
+ * une panne renvoie une liste vide (la carte affiche alors « Photos à venir »).
+ */
+export const getAgencyShowcase = cache(async (agency: number, count: number): Promise<AgencyListing[]> => {
+  try {
+    const { data } = await publicApi.GET("/api/v1/public/listings/", {
+      params: { query: { agency, page_size: count, ordering: "-published_at" } },
+    });
+    return (data?.results ?? []).filter((listing) => Boolean(listing.cover));
+  } catch {
+    return [];
+  }
+});

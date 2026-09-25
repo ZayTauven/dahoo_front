@@ -136,6 +136,23 @@
   box-shadow: 0 0 12px var(--ax-accent);
 }
 .ax-nav__item.is-active svg { color: var(--ax-accent); opacity: 1; }
+/* Dahoo : cette recette est hors couche, elle l'emporte donc sur les schémas de rail (couche
+   components). Sur les rails colorés du personnaliseur, le libellé actif (text-strong, foncé en mode
+   clair) et l'icône (accent sur accent) disparaissaient : ils prennent les couleurs du rail. */
+:is([data-ax-sidebar='dark'], [data-ax-sidebar='brand'], [data-ax-sidebar='gradient']) .ax-sidebar .ax-nav__item.is-active {
+  color: var(--ax-sidebar-fg-strong);
+}
+:is([data-ax-sidebar='brand'], [data-ax-sidebar='gradient']) .ax-sidebar .ax-nav__item.is-active {
+  background: var(--ax-sidebar-active-bg);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ax-sidebar-fg-strong) 22%, transparent);
+}
+:is([data-ax-sidebar='brand'], [data-ax-sidebar='gradient']) .ax-sidebar .ax-nav__item.is-active svg {
+  color: var(--ax-sidebar-fg-strong);
+}
+:is([data-ax-sidebar='brand'], [data-ax-sidebar='gradient']) .ax-sidebar .ax-nav__item.is-active::before {
+  background: var(--ax-sidebar-fg-strong);
+  box-shadow: none;
+}
 
 /* ════════════════ FOCUS RING (spec 01 §8.4 / §13) ════════════════ */
 /* Generic offset outline for tabbables WITHOUT a bespoke focus style.

@@ -1,9 +1,9 @@
 "use client";
 
-import { IconAdjustmentsHorizontal, IconChevronDown, IconRefresh, IconSearch } from "@tabler/icons-react";
+import { IconArrowRight, IconChevronDown, IconSearch } from "@tabler/icons-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useTransition, type FormEvent } from "react";
+import { useEffect, useRef, useTransition, type FormEvent, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -14,13 +14,45 @@ export const FILTER_FORM_ID = "annonces-filtres";
 /** Champs dont la valeur est un montant : les espaces de saisie (« 150 000 ») sont retirés. */
 const AMOUNT_FIELDS = new Set(["min_price", "max_price"]);
 
-const fieldLabel = "text-text-strong text-sm font-medium";
+/** Champ sans cadre : la cellule porte le filet, le champ ne garde que le texte. */
+const control =
+  "text-text-strong placeholder:text-text-subtle w-full min-w-0 appearance-none rounded-none border-0 bg-transparent p-0 text-base leading-snug outline-none";
 
 /**
- * Panneau de filtres : formulaire GET (fonctionne sans JavaScript, les filtres sont dans l'URL).
+ * Cellule du formulaire : étiquette en chasse fixe au-dessus d'un champ nu, filet en bas.
+ * Le focus se voit par un aplat sable et un filet d'encre plus épais.
+ */
+const cell =
+  "border-border-default relative flex min-w-0 flex-col justify-end gap-2.5 border-b py-5 transition-colors duration-300 focus-within:shadow-[inset_0_-2px_0_0_var(--ax-text-strong)] sm:px-5 sm:focus-within:bg-surface-subtle";
+
+function SelectChevron() {
+  return (
+    <IconChevronDown
+      size={16}
+      stroke={1.75}
+      aria-hidden="true"
+      className="text-text-muted pointer-events-none absolute right-0 bottom-[1.45rem] sm:right-5"
+    />
+  );
+}
+
+function Cell({ htmlFor, label, className, children }: { htmlFor: string; label: string; className?: string; children: ReactNode }) {
+  return (
+    <div className={cn(cell, className)}>
+      <label htmlFor={htmlFor} className="site-label text-text-muted cursor-pointer">
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+/**
+ * Filtres des listes d'annonces : formulaire GET (fonctionne sans JavaScript, les filtres sont dans l'URL).
  * Avec JavaScript, la soumission est interceptée pour produire une URL propre (sans champs vides)
  * et naviguer sans rechargement complet.
  *
+ * Présentation éditoriale : une grille de cellules séparées par des filets, sous un filet d'encre.
  * Mobile : replié dans un <details> (bouton « Filtrer », natif et accessible sans script).
  * Bureau (≥ lg) : toujours déplié — par CSS (::details-content) dès le premier affichage,
  * puis réellement ouvert au montage pour les technologies d'assistance et les navigateurs anciens.
@@ -76,29 +108,25 @@ export function FilterForm({
   return (
     <details
       ref={detailsRef}
-      className="group bg-(--ax-surface-solid) border-border-default relative z-10 rounded-2xl border shadow-[0_24px_60px_-32px_rgba(20,27,71,0.45)] lg:[&::details-content]:[content-visibility:visible]"
+      className="group border-text-strong border-t lg:[&::details-content]:[content-visibility:visible]"
     >
       <summary
         className={cn(
-          "text-text-strong flex min-h-14 cursor-pointer list-none items-center gap-3 rounded-2xl px-5 font-semibold select-none",
-          "focus-visible:ring-accent focus-visible:ring-2 focus-visible:outline-none [&::-webkit-details-marker]:hidden",
+          "text-text-strong border-border-default flex min-h-16 cursor-pointer list-none items-center gap-4 border-b select-none",
+          "focus-visible:outline-text-strong focus-visible:outline-2 focus-visible:outline-offset-4 [&::-webkit-details-marker]:hidden",
           "lg:group-open:hidden lg:supports-[selector(::details-content)]:hidden",
         )}
       >
-        <IconAdjustmentsHorizontal size={20} stroke={1.75} aria-hidden="true" className="text-brand" />
-        <span>Filtrer</span>
+        <span className="font-display text-2xl leading-none">Filtrer</span>
         {activeCount > 0 && (
-          <span className="bg-accent text-on-accent rounded-full px-2 py-0.5 text-xs font-bold">
-            {activeCount}
+          <span className="site-label text-accent-text">
+            ({String(activeCount).padStart(2, "0")})
             <span className="sr-only"> {activeCount > 1 ? "filtres actifs" : "filtre actif"}</span>
           </span>
         )}
-        <IconChevronDown
-          size={18}
-          stroke={2}
-          aria-hidden="true"
-          className="text-text-muted ml-auto transition-transform group-open:rotate-180"
-        />
+        <span className="site-label text-text-muted ml-auto group-open:hidden">Ouvrir</span>
+        <span className="site-label text-text-muted ml-auto hidden group-open:inline">Replier</span>
+        <IconChevronDown size={18} stroke={1.75} aria-hidden="true" className="text-text-muted transition-transform duration-500 group-open:rotate-180" />
       </summary>
 
       <form
@@ -108,19 +136,11 @@ export function FilterForm({
         role="search"
         aria-label="Filtrer les annonces"
         onSubmit={onSubmit}
-        className="border-border-default grid gap-4 border-t p-5 sm:grid-cols-2 lg:grid-cols-4 lg:border-t-0 lg:p-6"
+        className="grid sm:grid-cols-2 lg:grid-cols-12"
       >
-        <div className="flex flex-col gap-1.5 sm:col-span-2">
-          <label htmlFor="annonces-q" className={fieldLabel}>
-            Recherche
-          </label>
-          <div className="relative">
-            <IconSearch
-              size={18}
-              stroke={1.75}
-              aria-hidden="true"
-              className="text-text-subtle pointer-events-none absolute top-1/2 left-3 -translate-y-1/2"
-            />
+        <Cell htmlFor="annonces-q" label="Recherche" className="sm:col-span-2 sm:pl-0 lg:col-span-6">
+          <div className="flex items-center gap-3">
+            <IconSearch size={18} stroke={1.75} aria-hidden="true" className="text-text-muted shrink-0" />
             <input
               id="annonces-q"
               name="q"
@@ -128,24 +148,24 @@ export function FilterForm({
               defaultValue={filters.q ?? ""}
               maxLength={100}
               placeholder="Quartier, mot-clé… (ex. Almadies, piscine)"
-              className="ax-input ax-input--lg pl-10"
+              className={control}
             />
           </div>
-        </div>
+        </Cell>
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="annonces-city" className={fieldLabel}>
-            Ville
-          </label>
+        <Cell htmlFor="annonces-city" label="Ville" className="sm:pl-0 lg:col-span-3 lg:border-l lg:pl-5">
           {cityChoices.length > 0 ? (
-            <select id="annonces-city" name="city" defaultValue={filters.city ?? ""} className="ax-select ax-select--lg">
-              <option value="">Toutes les villes</option>
-              {cityChoices.map((city) => (
-                <option key={city} value={city}>
-                  {city}
-                </option>
-              ))}
-            </select>
+            <>
+              <select id="annonces-city" name="city" defaultValue={filters.city ?? ""} className={cn(control, "cursor-pointer pr-6")}>
+                <option value="">Toutes les villes</option>
+                {cityChoices.map((city) => (
+                  <option key={city} value={city}>
+                    {city}
+                  </option>
+                ))}
+              </select>
+              <SelectChevron />
+            </>
           ) : (
             <input
               id="annonces-city"
@@ -154,16 +174,18 @@ export function FilterForm({
               defaultValue={filters.city ?? ""}
               maxLength={80}
               placeholder="Ex. Dakar"
-              className="ax-input ax-input--lg"
+              className={control}
             />
           )}
-        </div>
+        </Cell>
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="annonces-category" className={fieldLabel}>
-            Type de bien
-          </label>
-          <select id="annonces-category" name="category" defaultValue={filters.category ?? ""} className="ax-select ax-select--lg">
+        <Cell htmlFor="annonces-category" label="Type de bien" className="sm:border-l lg:col-span-3">
+          <select
+            id="annonces-category"
+            name="category"
+            defaultValue={filters.category ?? ""}
+            className={cn(control, "cursor-pointer pr-6")}
+          >
             <option value="">Tous les types</option>
             {categories.map((category) => (
               <option key={category.value} value={category.value}>
@@ -171,53 +193,53 @@ export function FilterForm({
               </option>
             ))}
           </select>
-        </div>
+          <SelectChevron />
+        </Cell>
 
-        <fieldset className="m-0 grid min-w-0 grid-cols-2 gap-3 border-0 p-0 sm:col-span-2">
-          <legend className={cn(fieldLabel, "mb-1.5 p-0")}>
-            Budget <span className="text-text-muted font-normal">({budgetHint})</span>
+        <fieldset className={cn(cell, "m-0 block sm:col-span-2 sm:pl-0 lg:col-span-6")}>
+          <legend className="site-label text-text-muted float-left mb-2.5 w-full p-0">
+            Budget <span className="text-text-subtle">· {budgetHint}</span>
           </legend>
-          <div className="flex flex-col gap-1">
-            <label htmlFor="annonces-min-price" className="text-text-muted text-xs">
-              Minimum
-            </label>
-            <input
-              id="annonces-min-price"
-              name="min_price"
-              type="text"
-              inputMode="numeric"
-              autoComplete="off"
-              defaultValue={filters.min_price ?? ""}
-              placeholder="Sans minimum"
-              className="ax-input ax-input--lg"
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label htmlFor="annonces-max-price" className="text-text-muted text-xs">
-              Maximum
-            </label>
-            <input
-              id="annonces-max-price"
-              name="max_price"
-              type="text"
-              inputMode="numeric"
-              autoComplete="off"
-              defaultValue={filters.max_price ?? ""}
-              placeholder="Sans maximum"
-              className="ax-input ax-input--lg"
-            />
+          <div className="clear-both grid grid-cols-2 gap-6">
+            <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-baseline sm:gap-3">
+              <label htmlFor="annonces-min-price" className="text-text-muted shrink-0 text-sm">
+                Minimum
+              </label>
+              <input
+                id="annonces-min-price"
+                name="min_price"
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                defaultValue={filters.min_price ?? ""}
+                placeholder="Sans minimum"
+                className={cn(control, "font-mono text-[0.95rem] tabular-nums")}
+              />
+            </div>
+            <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-baseline sm:gap-3">
+              <label htmlFor="annonces-max-price" className="text-text-muted shrink-0 text-sm">
+                Maximum
+              </label>
+              <input
+                id="annonces-max-price"
+                name="max_price"
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                defaultValue={filters.max_price ?? ""}
+                placeholder="Sans maximum"
+                className={cn(control, "font-mono text-[0.95rem] tabular-nums")}
+              />
+            </div>
           </div>
         </fieldset>
 
-        <div className="flex flex-col gap-1.5 sm:self-end">
-          <label htmlFor="annonces-bedrooms" className={fieldLabel}>
-            Chambres
-          </label>
+        <Cell htmlFor="annonces-bedrooms" label="Chambres" className="sm:pl-0 lg:col-span-3 lg:border-l lg:pl-5">
           <select
             id="annonces-bedrooms"
             name="min_bedrooms"
             defaultValue={filters.min_bedrooms ?? ""}
-            className="ax-select ax-select--lg"
+            className={cn(control, "cursor-pointer pr-6")}
           >
             <option value="">Indifférent</option>
             {bedroomChoices.map((count) => (
@@ -226,20 +248,21 @@ export function FilterForm({
               </option>
             ))}
           </select>
-        </div>
+          <SelectChevron />
+        </Cell>
 
-        <div className="flex gap-2 sm:self-end">
+        <div className="border-border-default flex items-center gap-6 border-b py-4 sm:border-l sm:pl-5 lg:col-span-3">
           <button
             type="submit"
             className={cn("ax-btn ax-btn--primary ax-btn--lg flex-1", pending && "is-loading")}
             aria-busy={pending || undefined}
           >
-            <IconSearch className="ax-btn__icon" stroke={2} aria-hidden="true" />
             <span className="ax-btn__label">Rechercher</span>
+            <IconArrowRight className="ax-btn__icon" stroke={1.75} aria-hidden="true" />
             <span className="ax-btn__spinner" aria-hidden="true" />
           </button>
-          <Link href={path} className="ax-btn ax-btn--secondary ax-btn--lg ax-btn--icon" aria-label="Réinitialiser les filtres" title="Réinitialiser les filtres">
-            <IconRefresh className="ax-btn__icon" stroke={2} aria-hidden="true" />
+          <Link href={path} scroll={false} className="site-link site-label text-text-muted hover:text-text-strong shrink-0 py-2">
+            Effacer<span className="sr-only"> les filtres</span>
           </Link>
         </div>
       </form>

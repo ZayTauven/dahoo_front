@@ -23,6 +23,7 @@ import {
   PaymentDetailModal,
   unallocatedCents,
 } from "./_components/PaymentDetail";
+import { PaymentsStats } from "./_components/PaymentsStats";
 import { RecordPaymentModal } from "./_components/RecordPaymentModal";
 
 /** Paramètre d'URL du paiement ouvert en détail (lien partageable, fermé par le retour arrière). */
@@ -228,6 +229,7 @@ export function PaymentsScreen() {
         ]}
         actions={recordButton}
       />
+      <PaymentsStats />
       <section className="ax-card" aria-label="Liste des paiements">
         <div className="ax-card__body flex flex-col gap-5">
           <ListToolbar
@@ -283,7 +285,20 @@ export function PaymentsScreen() {
         </div>
       </section>
 
-      {recording && <RecordPaymentModal onClose={() => setRecording(false)} />}
+      {/* `?nouveau=1` (raccourci du tableau de bord) ouvre directement la saisie, dès que les droits sont connus. */}
+      {(recording || (params.get("nouveau") === "1" && canRecord)) && (
+        <RecordPaymentModal
+          onClose={() => {
+            setRecording(false);
+            if (params.has("nouveau")) {
+              const next = new URLSearchParams(params.toString());
+              next.delete("nouveau");
+              const rest = next.toString();
+              router.replace(rest ? `${pathname}?${rest}` : pathname, { scroll: false });
+            }
+          }}
+        />
+      )}
 
       {detailId !== null && !allocating && (
         <PaymentDetailModal

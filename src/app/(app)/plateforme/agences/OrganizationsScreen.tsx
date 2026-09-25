@@ -3,7 +3,7 @@
 import { IconBuildingCommunity, IconCircleCheck, IconClockX, IconHourglassHigh, IconPlayerPause, IconPlus } from "@tabler/icons-react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/app/EmptyState";
@@ -23,6 +23,10 @@ import { fetchAllOrganizations, KEYS, ORGANIZATION_STATE, PLATFORM_CRUMB, trialI
 
 export function OrganizationsScreen() {
   const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  // `?nouvelle=1` (raccourci de la vue d'ensemble) ouvre directement la création d'une agence.
+  const wantsNew = params.get("nouvelle") === "1";
   const list = useListParams([] as const);
   const [creating, setCreating] = useState(false);
 
@@ -152,9 +156,12 @@ export function OrganizationsScreen() {
         </div>
       </section>
 
-      {creating && (
+      {(creating || wantsNew) && (
         <CreateOrganizationModal
-          onClose={() => setCreating(false)}
+          onClose={() => {
+            setCreating(false);
+            if (wantsNew) router.replace(pathname, { scroll: false });
+          }}
           onCreated={(organization) => router.push(`/plateforme/agences/${organization.id}`)}
         />
       )}

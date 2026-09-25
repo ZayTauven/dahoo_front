@@ -20,6 +20,7 @@ import { enumLabel, enumOptions, LISTING_STATUS, LISTING_TYPE } from "@/lib/labe
 
 import { asListingStatus, asListingType, KEYS, MAX_PHOTOS, priceLabel, type Listing } from "./data";
 import { ListingFormModal } from "./ListingFormModal";
+import { ListingsStats } from "./ListingsStats";
 
 function parseUnit(raw: string | null): number | undefined {
   return raw && /^\d+$/.test(raw) && Number(raw) > 0 ? Number(raw) : undefined;
@@ -125,6 +126,7 @@ export function ListingsScreen() {
         crumbs={[{ label: "Espace agence", href: "/espace" }, { label: "Annonces" }]}
         actions={addButton}
       />
+      <ListingsStats />
       <section className="ax-card" aria-label="Liste des annonces">
         <div className="ax-card__body flex flex-col gap-5">
           <ListToolbar

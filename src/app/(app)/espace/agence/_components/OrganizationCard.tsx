@@ -11,7 +11,8 @@ import { useApiMutation } from "@/lib/api/useApiMutation";
 import { formatDate } from "@/lib/format";
 
 export type Organization = Schema<"Organization">;
-type OrganizationForm = Required<Schema<"PatchedOrganizationRequest">>;
+// Le thème a son propre écran (personnaliseur) : ce formulaire ne l'envoie jamais.
+type OrganizationForm = Required<Omit<Schema<"PatchedOrganizationRequest">, "theme">>;
 
 export const ORGANIZATION_KEY = ["organization", "current"] as const;
 

@@ -3,6 +3,8 @@
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 
+import { Customizer } from "@/components/app/customizer/Customizer";
+import { UiThemeProvider } from "@/components/app/customizer/UiThemeProvider";
 import { ToastProvider } from "@/components/app/ui/Toast";
 import { useTheme } from "@/components/providers/ThemeProvider";
 
@@ -55,23 +57,29 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <ToastProvider>
-      <div className="ax-ambient" aria-hidden="true">
-        <i />
-      </div>
-      <a className="ax-skip-link" href="#contenu">
-        Aller au contenu
-      </a>
-      <div className="ax-layout">
-        <Sidebar />
-        {drawerOpen && <button type="button" className="ax-backdrop" aria-label="Fermer le menu" onClick={closeDrawer} />}
-        <div className="ax-shell">
-          <Header onMenu={onMenu} />
-          <main className="ax-main" id="contenu">
-            <AccessBanner />
-            {children}
-          </main>
+      <UiThemeProvider>
+        <div className="ax-ambient" aria-hidden="true">
+          <i />
         </div>
-      </div>
+        <a className="ax-skip-link" href="#contenu">
+          Aller au contenu
+        </a>
+        <div className="ax-layout">
+          <Sidebar />
+          {drawerOpen && (
+            <button type="button" className="ax-backdrop" aria-label="Fermer le menu" onClick={closeDrawer} />
+          )}
+          <div className="ax-shell">
+            <Header onMenu={onMenu} />
+            <main className="ax-main" id="contenu">
+              <AccessBanner />
+              {children}
+            </main>
+          </div>
+        </div>
+        {/* Hors de l'en-tête : son backdrop-filter piégerait le tiroir en position fixe. */}
+        <Customizer />
+      </UiThemeProvider>
     </ToastProvider>
   );
 }

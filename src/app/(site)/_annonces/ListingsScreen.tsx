@@ -1,7 +1,10 @@
-import { IconAlertTriangle, IconHomeSearch, IconX } from "@tabler/icons-react";
+import { IconArrowRight, IconX } from "@tabler/icons-react";
 import Link from "next/link";
 
 import { Container } from "@/components/site/layout";
+import { Highlight, Reveal } from "@/components/site/motion";
+import { PageHero } from "@/components/site/PageHero";
+import { Pagination } from "@/components/site/Pagination";
 import { PropertyCard } from "@/components/site/PropertyCard";
 import { publicApi } from "@/lib/api/server";
 import type { Schema } from "@/lib/api/types";
@@ -16,7 +19,7 @@ import {
   apiQuery,
   categoryLabel,
   hasActiveFilters,
-  listingHeadline,
+  listingHeadlineParts,
   pageHref,
   parseFilters,
   searchString,
@@ -26,14 +29,24 @@ import {
   type ListingType,
   type RawSearchParams,
 } from "./filters";
-import { ListingsBanner } from "./ListingsBanner";
-import { Pagination } from "./Pagination";
 import { SortSelect } from "./SortSelect";
 
 type Result =
   | { status: "ok"; count: number; listings: Schema<"PublicListing">[] }
   | { status: "out-of-range" }
   | { status: "error" };
+
+/** Textes d'en-tête propres à chaque liste. */
+const INTRO: Record<ListingType, { eyebrow: string; lede: string }> = {
+  RENT: {
+    eyebrow: "Trouvez votre prochain logement",
+    lede: "Appartements, villas, studios et locaux professionnels proposés par des agences immobilières partenaires, de Dakar à la Petite-Côte.",
+  },
+  SALE: {
+    eyebrow: "Investissez en toute confiance",
+    lede: "Maisons, appartements et terrains à vendre, présentés par des agences immobilières vérifiées. Prix affichés en FCFA.",
+  },
+};
 
 async function loadListings(listingType: ListingType, filters: ListingFilters): Promise<Result> {
   try {
@@ -73,7 +86,7 @@ function resultsLabel(count: number): string {
 
 /**
  * Écran commun des listes d'annonces /louer et /acheter (Server Component) :
- * bandeau de titre, panneau de filtres chevauchant le bandeau, compteur + tri, grille, pagination.
+ * en-tête éditorial, filtres en grille à filets, compteur + tri, grille de cartes, pagination.
  */
 export async function ListingsScreen({ listingType, searchParams }: { listingType: ListingType; searchParams: RawSearchParams }) {
   const cities = await loadCities();
@@ -82,17 +95,35 @@ export async function ListingsScreen({ listingType, searchParams }: { listingTyp
 
   const page = LISTING_PAGES[listingType];
   const other = LISTING_PAGES[listingType === "RENT" ? "SALE" : "RENT"];
+  const intro = INTRO[listingType];
+  const headline = listingHeadlineParts(listingType, filters);
   const chips = activeChips(page.path, filters);
   const filtered = hasActiveFilters(filters);
+  const pageCount = result.status === "ok" ? Math.ceil(result.count / PAGE_SIZE) : 0;
   // Remonte les champs quand l'URL change (lien « retirer », réinitialisation) : ils reprennent les valeurs de l'URL.
   const stateKey = searchString(filters);
 
   return (
     <>
-      <ListingsBanner listingType={listingType} heading={listingHeadline(listingType, filters)} />
+      <PageHero
+        crumbs={[{ label: page.crumb }]}
+        eyebrow={intro.eyebrow}
+        title={
+          <>
+            {headline.subject} <Highlight>{headline.verb}</Highlight>
+            {headline.place}
+          </>
+        }
+        lede={intro.lede}
+        className="pb-12 sm:pb-16 lg:pb-20"
+      >
+        <Link href={other.path} className="site-link text-text-strong inline-flex items-center gap-2 self-start font-medium">
+          Voir plutôt les {other.title.toLowerCase()} <IconArrowRight size={18} stroke={1.75} aria-hidden="true" />
+        </Link>
+      </PageHero>
 
-      <div className="bg-surface-subtle pb-20 sm:pb-24">
-        <Container className="relative -mt-14 sm:-mt-16">
+      <div className="pb-24 sm:pb-32">
+        <Container>
           <FilterForm
             key={stateKey}
             path={page.path}
@@ -103,24 +134,27 @@ export async function ListingsScreen({ listingType, searchParams }: { listingTyp
             budgetHint={listingType === "RENT" ? "FCFA par mois" : "FCFA"}
           />
 
-          <section aria-labelledby="annonces-resultats" className="mt-10 sm:mt-12">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div aria-live="polite" className="flex flex-col gap-1">
-                <h2 id="annonces-resultats" className="font-display text-text-strong m-0 text-2xl font-semibold tracking-tight sm:text-3xl">
-                  {result.status === "ok" ? resultsLabel(result.count) : "Résultats"}
-                </h2>
+          <section aria-labelledby="annonces-resultats" className="mt-14 sm:mt-20">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+              <div aria-live="polite" className="flex flex-col gap-3">
                 {result.status === "ok" && result.count > PAGE_SIZE && (
-                  <p className="text-text-muted m-0 text-sm">
-                    Page {filters.page} sur {Math.ceil(result.count / PAGE_SIZE)}
+                  <p className="site-label text-text-muted m-0">
+                    Page {String(filters.page).padStart(2, "0")} / {String(pageCount).padStart(2, "0")}
                   </p>
                 )}
+                <h2
+                  id="annonces-resultats"
+                  className="font-display text-text-strong m-0 text-[2.6rem] leading-none tracking-tight sm:text-5xl lg:text-6xl"
+                >
+                  {result.status === "ok" ? resultsLabel(result.count) : "Résultats"}
+                </h2>
               </div>
               <SortSelect key={stateKey} value={filters.ordering} />
             </div>
 
             {chips.length > 0 && (
-              <div className="mt-5 flex flex-wrap items-center gap-2">
-                <p className="text-text-muted m-0 mr-1 text-sm">Filtres actifs :</p>
+              <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-3">
+                <p className="site-label text-text-muted m-0">Filtres actifs</p>
                 <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
                   {chips.map((chip) => (
                     <li key={chip.key}>
@@ -128,40 +162,34 @@ export async function ListingsScreen({ listingType, searchParams }: { listingTyp
                         href={chip.href}
                         scroll={false}
                         aria-label={`Retirer le filtre ${chip.label}`}
-                        className="border-border-default text-text-strong hover:border-brand hover:text-brand inline-flex min-h-9 items-center gap-1.5 rounded-full border bg-(--ax-surface-solid) py-1 pr-2.5 pl-3.5 text-sm font-medium no-underline transition-colors"
+                        className="border-border-strong text-text-strong hover:bg-text-strong hover:text-canvas inline-flex min-h-9 items-center gap-2 rounded-full border py-1 pr-3 pl-4 text-sm no-underline transition-colors duration-300"
                       >
                         {chip.label}
-                        <IconX size={14} stroke={2.25} aria-hidden="true" />
+                        <IconX size={14} stroke={1.75} aria-hidden="true" />
                       </Link>
                     </li>
                   ))}
                 </ul>
-                <Link href={page.path} scroll={false} className="text-link ml-1 text-sm font-semibold underline-offset-4 hover:underline">
+                <Link href={page.path} scroll={false} className="site-link text-text-strong text-sm font-medium">
                   Tout effacer
                 </Link>
               </div>
             )}
 
-            <div className="mt-8">
+            <div className="border-border-default mt-10 border-t pt-12 sm:pt-16">
               {result.status === "error" && (
-                <div role="alert" className="ax-alert ax-alert--danger">
-                  <IconAlertTriangle className="ax-alert__icon" stroke={1.75} aria-hidden="true" />
-                  <div className="ax-alert__content">
-                    <p className="ax-alert__title">Les annonces sont momentanément indisponibles</p>
-                    <p className="ax-alert__message">
-                      Nous n&apos;arrivons pas à charger les biens pour le moment. Réessayez dans quelques instants.
-                    </p>
-                    <div className="ax-alert__actions">
-                      <Link href={`${page.path}${stateKey}`} className="ax-btn ax-btn--secondary ax-btn--sm">
-                        <span className="ax-btn__label">Réessayer</span>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
+                <Notice
+                  role="alert"
+                  label="Service indisponible"
+                  title="Les annonces sont momentanément indisponibles"
+                  text="Nous n'arrivons pas à charger les biens pour le moment. Réessayez dans quelques instants."
+                  primary={{ label: "Réessayer", href: `${page.path}${stateKey}` }}
+                />
               )}
 
               {result.status === "out-of-range" && (
-                <EmptyResults
+                <Notice
+                  label="Page introuvable"
                   title="Cette page n'existe pas"
                   text="Le nombre d'annonces a changé depuis votre dernière visite. Revenez à la première page des résultats."
                   primary={{ label: "Première page", href: pageHref(page.path, filters, 1) }}
@@ -169,7 +197,8 @@ export async function ListingsScreen({ listingType, searchParams }: { listingTyp
               )}
 
               {result.status === "ok" && result.count === 0 && (
-                <EmptyResults
+                <Notice
+                  label={filtered ? "Aucun résultat" : "Bientôt en ligne"}
                   title={filtered ? "Aucun bien ne correspond à votre recherche" : `Aucun bien ${page.verb} pour le moment`}
                   text={
                     filtered
@@ -183,18 +212,15 @@ export async function ListingsScreen({ listingType, searchParams }: { listingTyp
 
               {result.status === "ok" && result.listings.length > 0 && (
                 <>
-                  <ul className="m-0 grid list-none gap-6 p-0 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
-                    {result.listings.map((listing) => (
-                      <li key={listing.id}>
-                        <PropertyCard listing={listing} />
-                      </li>
+                  {/* Colonne du milieu décalée vers le bas (bureau) : rythme de magazine, rangées lisibles. */}
+                  <ul className="m-0 grid list-none gap-x-8 gap-y-16 p-0 sm:grid-cols-2 sm:gap-y-20 lg:grid-cols-3 lg:[&>li:nth-child(3n+2)]:mt-24">
+                    {result.listings.map((listing, index) => (
+                      <Reveal as="li" key={listing.id} delay={(index % 3) * 0.08}>
+                        <PropertyCard listing={listing} preload={index < 3} />
+                      </Reveal>
                     ))}
                   </ul>
-                  <Pagination
-                    page={filters.page}
-                    pageCount={Math.ceil(result.count / PAGE_SIZE)}
-                    hrefFor={(target) => pageHref(page.path, filters, target)}
-                  />
+                  <Pagination page={filters.page} pageCount={pageCount} hrefFor={(target) => pageHref(page.path, filters, target)} />
                 </>
               )}
             </div>
@@ -205,38 +231,45 @@ export async function ListingsScreen({ listingType, searchParams }: { listingTyp
   );
 }
 
-function EmptyResults({
+/** État vide ou erreur, en typographie : étiquette, grand titre serif, texte et actions. */
+function Notice({
+  role,
+  label,
   title,
   text,
   primary,
   secondary,
 }: {
+  role?: "alert";
+  label: string;
   title: string;
   text: string;
   primary?: { label: string; href: string };
   secondary?: { label: string; href: string };
 }) {
   return (
-    <div className="border-border-default flex flex-col items-center gap-4 rounded-2xl border border-dashed bg-(--ax-surface-solid) px-6 py-14 text-center sm:py-20">
-      <span className="bg-accent-wash text-brand flex size-16 items-center justify-center rounded-full">
-        <IconHomeSearch size={30} stroke={1.5} aria-hidden="true" />
-      </span>
-      <h3 className="font-display text-text-strong m-0 max-w-md text-xl font-semibold sm:text-2xl">{title}</h3>
-      <p className="text-text-muted m-0 max-w-md text-base leading-relaxed">{text}</p>
-      {(primary || secondary) && (
-        <div className="mt-2 flex flex-wrap justify-center gap-3">
-          {primary && (
-            <Link href={primary.href} className="ax-btn ax-btn--primary ax-btn--lg">
-              <span className="ax-btn__label">{primary.label}</span>
-            </Link>
-          )}
-          {secondary && (
-            <Link href={secondary.href} className="ax-btn ax-btn--secondary ax-btn--lg">
-              <span className="ax-btn__label">{secondary.label}</span>
-            </Link>
-          )}
-        </div>
-      )}
+    <div role={role} className="grid gap-8 lg:grid-cols-12 lg:gap-8">
+      <p className="site-label text-accent-text m-0 lg:col-span-3 lg:pt-3">{label}</p>
+      <div className="flex flex-col items-start gap-6 lg:col-span-8">
+        <h3 className="font-display text-text-strong m-0 max-w-3xl text-4xl leading-[1.02] font-normal tracking-tight text-balance sm:text-5xl lg:text-6xl">
+          {title}
+        </h3>
+        <p className="text-text-muted m-0 max-w-xl text-base leading-relaxed sm:text-lg">{text}</p>
+        {(primary || secondary) && (
+          <div className="mt-2 flex flex-wrap items-center gap-x-8 gap-y-4">
+            {primary && (
+              <Link href={primary.href} className="ax-btn ax-btn--primary ax-btn--lg">
+                <span className="ax-btn__label">{primary.label}</span>
+              </Link>
+            )}
+            {secondary && (
+              <Link href={secondary.href} className="site-link text-text-strong inline-flex items-center gap-2 font-medium">
+                {secondary.label} <IconArrowRight size={18} stroke={1.75} aria-hidden="true" />
+              </Link>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

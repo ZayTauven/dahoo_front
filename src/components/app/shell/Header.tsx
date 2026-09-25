@@ -6,6 +6,7 @@ import {
   IconLogout,
   IconMenu2,
   IconMoon,
+  IconPalette,
   IconSun,
   IconWorld,
 } from "@tabler/icons-react";
@@ -13,6 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import { useUiTheme } from "@/components/app/customizer/UiThemeProvider";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import { setActiveOrganization } from "@/lib/api/client";
@@ -27,6 +29,7 @@ export function Header({ onMenu }: { onMenu: () => void }) {
   const queryClient = useQueryClient();
   const { resolved, toggleTheme } = useTheme();
   const { user, membership, memberships } = useSession();
+  const { openCustomizer } = useUiTheme();
 
   const switchOrganization = (organizationId: number) => {
     setActiveOrganization(organizationId);
@@ -44,7 +47,12 @@ export function Header({ onMenu }: { onMenu: () => void }) {
 
   return (
     <header className="ax-header">
-      <button type="button" className="ax-nav-toggle ax-icon-btn" onClick={onMenu} aria-label="Afficher ou masquer le menu">
+      <button
+        type="button"
+        className="ax-nav-toggle ax-icon-btn"
+        onClick={onMenu}
+        aria-label="Afficher ou masquer le menu"
+      >
         <IconMenu2 className="ax-icon" stroke={1.75} aria-hidden="true" />
       </button>
 
@@ -86,6 +94,17 @@ export function Header({ onMenu }: { onMenu: () => void }) {
 
       <button
         type="button"
+        className="ax-icon-btn"
+        onClick={() => openCustomizer()}
+        aria-haspopup="dialog"
+        aria-label="Personnaliser l'apparence"
+        title="Personnaliser l'apparence"
+      >
+        <IconPalette className="ax-icon" stroke={1.75} aria-hidden="true" />
+      </button>
+
+      <button
+        type="button"
         className="ax-theme-toggle ax-icon-btn"
         onClick={toggleTheme}
         aria-pressed={resolved === "dark"}
@@ -102,7 +121,13 @@ export function Header({ onMenu }: { onMenu: () => void }) {
         className="ax-profile"
         panelClassName="ax-dropdown ax-profile__menu"
         trigger={({ open, triggerProps }) => (
-          <button type="button" className="ax-profile__trigger" aria-label="Menu du compte" {...triggerProps} aria-expanded={open}>
+          <button
+            type="button"
+            className="ax-profile__trigger"
+            aria-label="Menu du compte"
+            {...triggerProps}
+            aria-expanded={open}
+          >
             <span className="ax-avatar ax-avatar--sm ax-profile__avatar" aria-hidden="true">
               <span className="ax-avatar__initials">{initials(user?.first_name, user?.last_name)}</span>
             </span>

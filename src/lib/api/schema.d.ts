@@ -36,6 +36,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/analytics/dashboard/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Tableau de bord de l'agence active : portefeuille, baux, finances (12 derniers mois par défaut),
+         *     maintenance, annonces et alertes. Chaque section vaut `null` si le rôle ne permet pas de la voir.
+         */
+        get: operations["v1_analytics_dashboard_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/analytics/insights/": {
         parameters: {
             query?: never;
@@ -1288,6 +1308,23 @@ export interface paths {
         patch: operations["v1_payments_schedules_partial_update"];
         trace?: never;
     };
+    "/api/v1/platform/dashboard/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Tableau de bord de l'équipe Dahoo : agences, essais, abonnements, démos et activité du portail. */
+        get: operations["v1_platform_dashboard_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/demo-requests/": {
         parameters: {
             query?: never;
@@ -1986,12 +2023,42 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
+         * @description * `dahoo` - Dahoo
+         *     * `verdigris` - Vert-de-gris
+         *     * `cobalt` - Cobalt
+         *     * `indigo` - Indigo
+         *     * `amethyst` - Améthyste
+         *     * `magenta` - Magenta
+         *     * `terracotta` - Terracotta
+         *     * `amber` - Ambre
+         *     * `olive` - Olive
+         *     * `forest` - Forêt
+         *     * `teal` - Sarcelle
+         *     * `slate` - Ardoise
+         *     * `graphite` - Graphite
+         *     * `custom` - Personnalisée
+         * @enum {string}
+         */
+        AccentEnum: "dahoo" | "verdigris" | "cobalt" | "indigo" | "amethyst" | "magenta" | "terracotta" | "amber" | "olive" | "forest" | "teal" | "slate" | "graphite" | "custom";
+        /**
          * @description * `ACTIVE` - ACTIVE
          *     * `TRIAL` - TRIAL
          *     * `EXPIRED` - EXPIRED
          * @enum {string}
          */
         AccessStatusEnum: "ACTIVE" | "TRIAL" | "EXPIRED";
+        AgencyStatusCounts: {
+            ACTIVE: number;
+            TRIAL: number;
+            EXPIRED: number;
+            SUSPENDED: number;
+        };
+        AgingBucket: {
+            bucket: components["schemas"]["BucketEnum"];
+            /** Format: decimal */
+            amount: string;
+            count: number;
+        };
         AllocationInputRequest: {
             schedule: number;
             /** Format: decimal */
@@ -2025,6 +2092,14 @@ export interface components {
          * @enum {string}
          */
         BillingTypeEnum: "MONTHLY" | "YEARLY" | "COMMISSION";
+        /**
+         * @description * `0-30` - 0-30
+         *     * `31-60` - 31-60
+         *     * `61-90` - 61-90
+         *     * `90+` - 90+
+         * @enum {string}
+         */
+        BucketEnum: "0-30" | "31-60" | "61-90" | "90+";
         Building: {
             readonly id: number;
             readonly property: number;
@@ -2072,6 +2147,17 @@ export interface components {
             city: string;
             listings_count: number;
         };
+        Dashboard: {
+            /** Format: date-time */
+            generated_at: string;
+            months: number;
+            portfolio: components["schemas"]["Portfolio"] | null;
+            leases: components["schemas"]["LeasesSummary"] | null;
+            finance: components["schemas"]["FinanceSummary"] | null;
+            maintenance: components["schemas"]["MaintenanceSummary"] | null;
+            listings: components["schemas"]["ListingsSummary"] | null;
+            insights: components["schemas"]["InsightItem"][];
+        };
         DeliveryEvent: {
             readonly id: number;
             field_event: number;
@@ -2101,6 +2187,14 @@ export interface components {
             /** Nombre de lots gérés */
             units_range: components["schemas"]["UnitsRangeEnum"];
             message?: string;
+        };
+        EndingLease: {
+            id: number;
+            tenant: string;
+            unit: string;
+            /** Format: date */
+            end_date: string;
+            days_left: number;
         };
         /**
          * @description * `LEASE_CREATED` - Contrat créé
@@ -2140,6 +2234,19 @@ export interface components {
             /** Format: date-time */
             occurred_at: string;
         };
+        FinanceSummary: {
+            monthly: components["schemas"]["MonthlyFinance"][];
+            /** Format: decimal */
+            period_collected: string;
+            /** Format: decimal */
+            period_expected: string;
+            this_month: components["schemas"]["MonthRecovery"];
+            overdue: components["schemas"]["Overdue"];
+            late: components["schemas"]["ScheduleRow"][];
+            upcoming: components["schemas"]["ScheduleRow"][];
+            by_method: components["schemas"]["MethodTotal"][];
+            recent_payments: components["schemas"]["RecentPayment"][];
+        };
         FinancialSnapshot: {
             readonly id: number;
             /** Format: date */
@@ -2170,6 +2277,15 @@ export interface components {
             active?: boolean;
             buildings: number[];
         };
+        /**
+         * @description * `light` - Clair
+         *     * `dark` - Sombre
+         *     * `brand` - Marque
+         *     * `gradient` - Dégradé
+         *     * `transparent` - Transparent
+         * @enum {string}
+         */
+        HeaderEnum: "light" | "dark" | "brand" | "gradient" | "transparent";
         InAppNotification: {
             readonly id: number;
             readonly title: string;
@@ -2189,6 +2305,14 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
         };
+        InsightItem: {
+            kind: components["schemas"]["KindEnum"];
+            severity: components["schemas"]["SeverityEnum"];
+            title: string;
+            /** Format: decimal */
+            amount: string | null;
+            href: string;
+        };
         /**
          * @description * `PAYMENT_RISK` - Risque d’impayé
          *     * `HIGH_VACANCY` - Vacance élevée
@@ -2197,6 +2321,16 @@ export interface components {
          * @enum {string}
          */
         InsightTypeEnum: "PAYMENT_RISK" | "HIGH_VACANCY" | "MAINTENANCE_ALERT" | "UNDERPRICED";
+        /**
+         * @description * `overdue` - overdue
+         *     * `urgent_tickets` - urgent_tickets
+         *     * `leases_ending` - leases_ending
+         *     * `collection` - collection
+         *     * `vacancy` - vacancy
+         *     * `interests` - interests
+         * @enum {string}
+         */
+        KindEnum: "overdue" | "urgent_tickets" | "leases_ending" | "collection" | "vacancy" | "interests";
         LeaseContract: {
             readonly id: number;
             readonly status: components["schemas"]["LeaseStatusEnum"];
@@ -2245,6 +2379,14 @@ export interface components {
          * @enum {string}
          */
         LeaseStatusEnum: "DRAFT" | "ACTIVE" | "TERMINATED" | "COMPLETED" | "CANCELLED";
+        LeasesSummary: {
+            active: number;
+            drafts: number;
+            tenants: number;
+            /** Format: decimal */
+            monthly_rent_roll: string;
+            ending_soon: components["schemas"]["EndingLease"][];
+        };
         Listing: {
             readonly id: number;
             unit: number;
@@ -2323,6 +2465,15 @@ export interface components {
          * @enum {string}
          */
         ListingTypeEnum: "RENT" | "SALE";
+        ListingsSummary: {
+            published: number;
+            drafts: number;
+            interests_period: number;
+            interests_30d: number;
+            monthly_interests: components["schemas"]["MonthlyInterestCount"][];
+            top_listings: components["schemas"]["TopListing"][];
+            recent_interests: components["schemas"]["RecentInterest"][];
+        };
         LoginRequest: {
             phone: string;
             password: string;
@@ -2358,6 +2509,16 @@ export interface components {
         };
         MaintenanceLogRequest: {
             message: string;
+        };
+        MaintenanceSummary: {
+            open: number;
+            urgent_open: number;
+            by_status: components["schemas"]["TicketsByStatus"];
+            monthly: components["schemas"]["MonthlyTickets"][];
+            /** Format: double */
+            avg_resolution_days: number | null;
+            by_category: components["schemas"]["TicketCategoryCount"][];
+            recent_open: components["schemas"]["OpenTicket"][];
         };
         MaintenanceTicket: {
             readonly id: number;
@@ -2407,6 +2568,7 @@ export interface components {
             /** Format: date-time */
             trial_ends_at: string;
             readonly access_status: components["schemas"]["AccessStatusEnum"];
+            readonly organization_theme: components["schemas"]["OrganizationTheme"];
         };
         MemberUser: {
             readonly id: number;
@@ -2444,6 +2606,42 @@ export interface components {
         MembershipRequest: {
             role: string;
             is_active?: boolean;
+        };
+        MethodTotal: {
+            code: string;
+            label: string;
+            /** Format: decimal */
+            amount: string;
+            count: number;
+        };
+        MonthRecovery: {
+            /** Format: decimal */
+            expected: string;
+            /** Format: decimal */
+            collected: string;
+            /** Format: double */
+            rate: number | null;
+        };
+        MonthlyFinance: {
+            /** @description AAAA-MM */
+            month: string;
+            /** Format: decimal */
+            expected: string;
+            /** Format: decimal */
+            collected: string;
+            /** Format: double */
+            rate: number | null;
+        };
+        MonthlyInterestCount: {
+            /** @description AAAA-MM */
+            month: string;
+            count: number;
+        };
+        MonthlyTickets: {
+            /** @description AAAA-MM */
+            month: string;
+            created: number;
+            resolved: number;
         };
         Notification: {
             readonly id: number;
@@ -2489,6 +2687,15 @@ export interface components {
             body_template: string;
             active?: boolean;
         };
+        OpenTicket: {
+            id: number;
+            unit: string;
+            category: string;
+            priority: components["schemas"]["PriorityEnum"];
+            status: components["schemas"]["TicketStatusEnum"];
+            description: string;
+            age_days: number;
+        };
         Organization: {
             readonly id: number;
             name: string;
@@ -2496,6 +2703,9 @@ export interface components {
             email?: string;
             address?: string;
             city?: string;
+            /** Format: uri */
+            readonly logo: string | null;
+            theme?: components["schemas"]["OrganizationTheme"];
             readonly is_active: boolean;
             /** Format: date-time */
             readonly trial_ends_at: string;
@@ -2517,7 +2727,46 @@ export interface components {
             email?: string;
             address?: string;
             city?: string;
+            theme?: components["schemas"]["OrganizationThemeRequest"];
         };
+        /** @description Réglages facultatifs : une clé absente = valeur par défaut de Dahoo. */
+        OrganizationTheme: {
+            accent?: components["schemas"]["AccentEnum"];
+            /** @description #RRGGBB, si accent = custom */
+            accent_custom?: string;
+            sidebar?: components["schemas"]["SidebarEnum"];
+            header?: components["schemas"]["HeaderEnum"];
+            shell?: components["schemas"]["ShellEnum"];
+            sidebar_behavior?: components["schemas"]["SidebarBehaviorEnum"];
+            page?: components["schemas"]["PageEnum"];
+            width?: components["schemas"]["WidthEnum"];
+        };
+        /** @description Réglages facultatifs : une clé absente = valeur par défaut de Dahoo. */
+        OrganizationThemeRequest: {
+            accent?: components["schemas"]["AccentEnum"];
+            /** @description #RRGGBB, si accent = custom */
+            accent_custom?: string;
+            sidebar?: components["schemas"]["SidebarEnum"];
+            header?: components["schemas"]["HeaderEnum"];
+            shell?: components["schemas"]["ShellEnum"];
+            sidebar_behavior?: components["schemas"]["SidebarBehaviorEnum"];
+            page?: components["schemas"]["PageEnum"];
+            width?: components["schemas"]["WidthEnum"];
+        };
+        Overdue: {
+            /** Format: decimal */
+            amount: string;
+            count: number;
+            tenants: number;
+            aging: components["schemas"]["AgingBucket"][];
+        };
+        /**
+         * @description * `regular` - Standard
+         *     * `classic` - Classique
+         *     * `compact` - Compact
+         * @enum {string}
+         */
+        PageEnum: "regular" | "classic" | "compact";
         PaginatedAutomationRuleList: {
             /** @example 123 */
             count: number;
@@ -3002,6 +3251,7 @@ export interface components {
             email?: string;
             address?: string;
             city?: string;
+            theme?: components["schemas"]["OrganizationThemeRequest"];
         };
         PatchedPaymentMethodRequest: {
             code?: string;
@@ -3173,6 +3423,39 @@ export interface components {
             /** Format: decimal */
             amount_due: string;
         };
+        PendingDemo: {
+            id: number;
+            agency_name: string;
+            contact_name: string;
+            city: string;
+            units_range: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        PlanRevenue: {
+            plan: string;
+            count: number;
+            /** Format: decimal */
+            mrr: string;
+        };
+        PlatformAgencies: {
+            total: number;
+            by_status: components["schemas"]["AgencyStatusCounts"];
+            members: number;
+            cities: number;
+        };
+        PlatformDashboard: {
+            /** Format: date-time */
+            generated_at: string;
+            months: number;
+            agencies: components["schemas"]["PlatformAgencies"];
+            trials_ending: components["schemas"]["TrialEnding"][];
+            monthly: components["schemas"]["PlatformMonth"][];
+            subscriptions: components["schemas"]["PlatformSubscriptionsSummary"];
+            demo_requests: components["schemas"]["PlatformDemoSummary"];
+            portal: components["schemas"]["PlatformPortal"];
+            top_agencies: components["schemas"]["TopAgency"][];
+        };
         /** @description Demande de démo reçue par la vitrine ; seul `handled` est modifiable. */
         PlatformDemoRequest: {
             readonly id: number;
@@ -3189,6 +3472,18 @@ export interface components {
             readonly created_at: string;
             /** Traitée */
             handled?: boolean;
+        };
+        PlatformDemoSummary: {
+            total: number;
+            pending: number;
+            last_30d: number;
+            recent_pending: components["schemas"]["PendingDemo"][];
+        };
+        PlatformMonth: {
+            /** @description AAAA-MM */
+            month: string;
+            signups: number;
+            demo_requests: number;
         };
         PlatformOrganization: {
             readonly id: number;
@@ -3228,6 +3523,16 @@ export interface components {
             /** Format: date-time */
             trial_ends_at?: string;
         };
+        PlatformPortal: {
+            listings_published: number;
+            listings_rent: number;
+            listings_sale: number;
+            interests_30d: number;
+            units_managed: number;
+            /** Format: decimal */
+            payments_30d_amount: string;
+            payments_30d_count: number;
+        };
         PlatformSubscription: {
             readonly id: number;
             readonly organization: number;
@@ -3247,6 +3552,21 @@ export interface components {
             start_date: string;
             /** Format: date */
             end_date?: string | null;
+        };
+        PlatformSubscriptionsSummary: {
+            active: number;
+            /** Format: decimal */
+            mrr: string;
+            by_plan: components["schemas"]["PlanRevenue"][];
+        };
+        Portfolio: {
+            properties: number;
+            buildings: number;
+            units: number;
+            units_by_status: components["schemas"]["UnitsByStatus"];
+            units_by_category: components["schemas"]["UnitCategoryCount"][];
+            /** Format: double */
+            occupancy_rate: number | null;
         };
         /**
          * @description * `LOW` - Basse
@@ -3322,12 +3642,16 @@ export interface components {
             readonly id: number;
             name: string;
             city?: string;
+            /** Format: uri */
+            readonly logo: string | null;
             readonly listings_count: number;
         };
         PublicAgencyContact: {
             readonly id: number;
             name: string;
             city?: string;
+            /** Format: uri */
+            readonly logo: string | null;
             phone?: string;
             email?: string;
         };
@@ -3335,6 +3659,8 @@ export interface components {
             readonly id: number;
             name: string;
             city?: string;
+            /** Format: uri */
+            readonly logo: string | null;
             readonly listings_count: number;
             phone?: string;
             email?: string;
@@ -3345,6 +3671,8 @@ export interface components {
             readonly id: number;
             name: string;
             city?: string;
+            /** Format: uri */
+            readonly logo: string | null;
         };
         /** @description Accusé de réception d'une demande publique (sans les données du prospect). */
         PublicInterestReceipt: {
@@ -3432,11 +3760,43 @@ export interface components {
             by_category: components["schemas"]["CategoryCount"][];
             cities: components["schemas"]["CityCount"][];
         };
+        RecentInterest: {
+            id: number;
+            prospect: string;
+            source: string;
+            listing_id: number;
+            listing: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        RecentPayment: {
+            id: number;
+            /** Format: date-time */
+            date: string;
+            /** Format: decimal */
+            amount: string;
+            method: string;
+            method_code: string;
+            payer: string;
+        };
         Role: {
             readonly id: number;
             code: string;
             label: string;
             readonly capabilities: string[];
+        };
+        ScheduleRow: {
+            id: number;
+            /** Format: date */
+            due_date: string;
+            /** Format: decimal */
+            amount_due: string;
+            /** Format: decimal */
+            remaining: string;
+            days_late: number;
+            tenant: string;
+            unit: string;
+            lease_id: number | null;
         };
         /**
          * @description * `RENT` - Loyer
@@ -3445,6 +3805,36 @@ export interface components {
          * @enum {string}
          */
         ScheduleTypeEnum: "RENT" | "CHARGE" | "SALE";
+        /**
+         * @description * `danger` - danger
+         *     * `warning` - warning
+         *     * `info` - info
+         *     * `success` - success
+         * @enum {string}
+         */
+        SeverityEnum: "danger" | "warning" | "info" | "success";
+        /**
+         * @description * `default` - Collé
+         *     * `detached` - Détaché
+         * @enum {string}
+         */
+        ShellEnum: "default" | "detached";
+        /**
+         * @description * `collapsible` - Repliable
+         *     * `expanded` - Déplié
+         *     * `compact` - Compact
+         * @enum {string}
+         */
+        SidebarBehaviorEnum: "collapsible" | "expanded" | "compact";
+        /**
+         * @description * `light` - Clair
+         *     * `dark` - Sombre
+         *     * `brand` - Marque
+         *     * `gradient` - Dégradé
+         *     * `transparent` - Transparent
+         * @enum {string}
+         */
+        SidebarEnum: "light" | "dark" | "brand" | "gradient" | "transparent";
         Subscription: {
             readonly id: number;
             readonly plan: components["schemas"]["SubscriptionPlan"];
@@ -3530,6 +3920,10 @@ export interface components {
             id_document_number?: string;
             notes?: string;
         };
+        TicketCategoryCount: {
+            label: string;
+            count: number;
+        };
         /**
          * @description * `OPEN` - Ouvert
          *     * `IN_PROGRESS` - En cours
@@ -3542,12 +3936,56 @@ export interface components {
         TicketStatusRequest: {
             status: components["schemas"]["TicketStatusEnum"];
         };
+        TicketsByStatus: {
+            OPEN: number;
+            IN_PROGRESS: number;
+            WAITING: number;
+            RESOLVED: number;
+            CLOSED: number;
+        };
         TokenRefresh: {
             readonly access: string;
             refresh: string;
         };
         TokenRefreshRequest: {
             refresh: string;
+        };
+        TopAgency: {
+            id: number;
+            name: string;
+            city: string;
+            /** Format: uri */
+            logo: string | null;
+            status: components["schemas"]["TopAgencyStatusEnum"];
+            members: number;
+            units: number;
+            listings: number;
+        };
+        /**
+         * @description * `ACTIVE` - Abonnée
+         *     * `TRIAL` - En essai
+         *     * `EXPIRED` - Essai expiré
+         *     * `SUSPENDED` - Suspendue
+         * @enum {string}
+         */
+        TopAgencyStatusEnum: "ACTIVE" | "TRIAL" | "EXPIRED" | "SUSPENDED";
+        TopListing: {
+            id: number;
+            title: string;
+            listing_type: components["schemas"]["ListingTypeEnum"];
+            /** Format: decimal */
+            price: string;
+            interests: number;
+            /** Format: uri */
+            cover: string | null;
+        };
+        TrialEnding: {
+            id: number;
+            name: string;
+            city: string;
+            days_left: number;
+            members: number;
+            listings: number;
         };
         TypeCount: {
             listing_type: components["schemas"]["ListingTypeEnum"];
@@ -3569,6 +4007,11 @@ export interface components {
             parking_spaces?: number | null;
             is_furnished?: boolean;
             status: components["schemas"]["UnitStatusEnum"];
+        };
+        UnitCategoryCount: {
+            category: string;
+            label: string;
+            count: number;
         };
         /**
          * @description * `APARTMENT` - Appartement
@@ -3603,6 +4046,12 @@ export interface components {
         UnitStatusRequest: {
             status: components["schemas"]["UnitStatusEnum"];
         };
+        UnitsByStatus: {
+            FREE: number;
+            RENTED: number;
+            MAINTENANCE: number;
+            SOLD: number;
+        };
         /**
          * @description * `1-20` - 1-20
          *     * `21-100` - 21-100
@@ -3618,6 +4067,12 @@ export interface components {
             purpose: string;
             authorized_by: number;
         };
+        /**
+         * @description * `fluid` - Centrée
+         *     * `full` - Pleine largeur
+         * @enum {string}
+         */
+        WidthEnum: "fluid" | "full";
     };
     responses: never;
     parameters: never;
@@ -3664,6 +4119,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaginatedRoleList"];
+                };
+            };
+        };
+    };
+    v1_analytics_dashboard_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Nombre de mois d'historique : 6 ou 12 (défaut 12). */
+                months?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Dashboard"];
                 };
             };
         };
@@ -5862,6 +6339,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaymentSchedule"];
+                };
+            };
+        };
+    };
+    v1_platform_dashboard_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Nombre de mois d'historique : 6 ou 12 (défaut 12). */
+                months?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformDashboard"];
                 };
             };
         };

@@ -1,19 +1,21 @@
-import { IconArrowRight, IconBuildingCommunity, IconCircleCheck, IconMapPin } from "@tabler/icons-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Fragment } from "react";
 
-import { Container, Section } from "@/components/site/layout";
+import { Container } from "@/components/site/layout";
 import { Highlight, Reveal } from "@/components/site/motion";
-import { SectionHeading } from "@/components/site/SectionHeading";
+import { PageHero } from "@/components/site/PageHero";
+import { Pagination } from "@/components/site/Pagination";
 import type { Schema } from "@/lib/api/types";
+import { formatNumber } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 import { countLabel, pageParam } from "./_components/agency";
+import { AgencyCard, CARD_PHOTOS } from "./_components/AgencyCard";
 import { AgencyCta } from "./_components/AgencyCta";
-import { AgencyMonogram } from "./_components/AgencyMonogram";
-import { AGENCIES_PAGE_SIZE, getAgencies } from "./_components/data";
-import { PageBanner } from "./_components/PageBanner";
-import { Pagination } from "./_components/Pagination";
+import { AGENCIES_MAX_PAGE_SIZE, AGENCIES_PAGE_SIZE, getAgencies, getAgencyShowcase } from "./_components/data";
+import { Notice } from "./_components/Notice";
 
 export const metadata: Metadata = {
   title: "Agences immobilières partenaires",
@@ -22,131 +24,169 @@ export const metadata: Metadata = {
   alternates: { canonical: "/agences" },
 };
 
-function AgencyCard({ agency }: { agency: Schema<"PublicAgency"> }) {
+type Agency = Schema<"PublicAgency">;
+
+/** Clé de comparaison d'une ville (« Saint-Louis » = « saint louis »). */
+function cityKey(city: string): string {
+  return city
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/[\s-]+/g, " ")
+    .trim();
+}
+
+/** Villes des agences, de la plus représentée à la moins représentée. */
+function citiesOf(agencies: Agency[]): { city: string; count: number }[] {
+  const byKey = new Map<string, { city: string; count: number }>();
+  for (const agency of agencies) {
+    if (!agency.city) continue;
+    const key = cityKey(agency.city);
+    const entry = byKey.get(key);
+    if (entry) entry.count += 1;
+    else byKey.set(key, { city: agency.city, count: 1 });
+  }
+  return [...byKey.values()].sort((a, b) => b.count - a.count || a.city.localeCompare(b.city, "fr"));
+}
+
+/** Filtre par ville, en liens (fonctionne sans JavaScript, indexable). */
+function CityFilter({ cities, total, current }: { cities: { city: string; count: number }[]; total: number; current?: string }) {
+  const items = [{ label: "Toutes", count: total, href: "/agences", active: !current }].concat(
+    cities.map((item) => ({
+      label: item.city,
+      count: item.count,
+      href: `/agences?ville=${encodeURIComponent(item.city)}`,
+      active: current !== undefined && cityKey(item.city) === current,
+    })),
+  );
   return (
-    <article className="border-border-default group relative flex h-full flex-col items-center rounded-xl border bg-[var(--ax-surface-solid)] px-6 pt-8 pb-6 text-center shadow-card transition-transform duration-300 hover:-translate-y-1">
-      <div className="relative">
-        <AgencyMonogram id={agency.id} name={agency.name} className="size-24 text-2xl" />
-        <span className="bg-accent text-on-accent absolute -top-1 -right-6 rounded-full px-2.5 py-1 text-xs font-bold whitespace-nowrap shadow-sm">
-          {countLabel(agency.listings_count, "annonce", "annonces")}
-        </span>
-      </div>
-
-      <h3 className="font-display text-text-strong m-0 mt-6 text-xl leading-snug font-semibold">
-        <Link href={`/agences/${agency.id}`} className="text-inherit no-underline after:absolute after:inset-0 after:rounded-xl group-hover:text-brand">
-          {agency.name}
-        </Link>
-      </h3>
-      {agency.city && (
-        <p className="text-text-muted m-0 mt-2 flex items-center gap-1 text-sm">
-          <IconMapPin size={16} stroke={1.75} aria-hidden="true" /> {agency.city}
-        </p>
-      )}
-
-      <div className="mt-auto w-full pt-6">
-        <p className="border-border-default text-text-strong m-0 flex items-center justify-center gap-2 border-t pt-5 text-sm font-semibold">
-          Voir la fiche et les biens
-          <IconArrowRight size={16} stroke={2} aria-hidden="true" className="transition-transform group-hover:translate-x-1" />
-        </p>
-      </div>
-    </article>
+    <nav aria-label="Filtrer les agences par ville">
+      <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
+        {items.map((item) => (
+          <li key={item.href}>
+            <Link
+              href={item.href}
+              aria-current={item.active ? "page" : undefined}
+              className={cn(
+                "inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-medium no-underline transition-colors duration-300",
+                item.active
+                  ? "bg-text-strong text-canvas border-transparent"
+                  : "border-border-strong text-text-strong hover:bg-(--ax-fill-hover)",
+              )}
+            >
+              {item.label}
+              <span className={cn("font-mono text-xs", item.active ? "text-canvas/70" : "text-text-muted")}>{formatNumber(item.count)}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 }
 
 export default async function AgenciesPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const page = pageParam((await searchParams).page);
-  const result = await getAgencies(page);
-  if (result === "page-not-found") notFound();
+  const query = await searchParams;
+  const page = pageParam(query.page);
+  const rawCity = Array.isArray(query.ville) ? query.ville[0] : query.ville;
+  const city = rawCity?.trim() ? cityKey(rawCity) : undefined;
 
-  const pageCount = result ? Math.max(1, Math.ceil(result.count / AGENCIES_PAGE_SIZE)) : 1;
+  // L'API ne filtre pas les agences par ville : on lit tout l'annuaire (une page de 50, le maximum)
+  // pour les villes du filtre et, si une ville est choisie, on filtre ici (sans pagination).
+  const [directory, paged] = await Promise.all([
+    getAgencies(1, AGENCIES_MAX_PAGE_SIZE),
+    city ? Promise.resolve(null) : getAgencies(page),
+  ]);
+  if (paged === "page-not-found") notFound();
+
+  const all = directory && directory !== "page-not-found" ? directory.results : [];
+  const cities = citiesOf(all);
+  const result = city
+    ? directory && directory !== "page-not-found"
+      ? { results: all.filter((agency) => agency.city && cityKey(agency.city) === city) }
+      : null
+    : paged;
+  const agencies = result?.results ?? [];
+  const pageCount = !city && paged ? Math.max(1, Math.ceil(paged.count / AGENCIES_PAGE_SIZE)) : 1;
+  const cityLabel = city ? (cities.find((item) => cityKey(item.city) === city)?.city ?? rawCity) : undefined;
+
+  // Vitrines des agences : un appel par agence, en parallèle, mis en cache 60 s.
+  const showcases = await Promise.all(
+    agencies.map((agency) => (agency.listings_count > 0 ? getAgencyShowcase(agency.id, CARD_PHOTOS) : Promise.resolve([]))),
+  );
+
+  const total = directory && directory !== "page-not-found" ? directory.count : agencies.length;
 
   return (
     <>
-      <PageBanner
-        eyebrow="Agences partenaires"
-        title={
-          <>
-            Des agences de confiance, <br className="hidden sm:inline" />
-            près de chez vous.
-          </>
-        }
-        lede="Toutes les annonces du portail Dahoo sont publiées directement par des agences immobilières du Sénégal. Retrouvez leurs coordonnées et l'ensemble de leurs biens."
+      <PageHero
+        className="pb-8 sm:pb-10 lg:pb-12"
         crumbs={[{ label: "Agences" }]}
-        image="/images/site/slider-03.webp"
-        watermark="agences"
-      />
+        eyebrow={total > 0 ? countLabel(total, "agence partenaire", "agences partenaires") : "Agences partenaires"}
+        title={
+          // Clé : PageHero place le titre dans une liste (RevealLines).
+          <Fragment key="titre">
+            Des agences de confiance, <Highlight>près de chez vous</Highlight>
+          </Fragment>
+        }
+        lede={<p className="m-0">Chaque annonce du portail est publiée par l&apos;une de ces agences. Voyez leurs biens, puis appelez-les.</p>}
+      >
+        {cities.length > 1 && <CityFilter cities={cities} total={total} current={city} />}
+      </PageHero>
 
-      <Section tone="subtle" labelledBy="liste-agences">
+      <section aria-labelledby="liste-agences" className="pb-16 sm:pb-24 lg:pb-28">
         <Container>
-          <Reveal>
-            <SectionHeading
-              id="liste-agences"
-              eyebrow="Annuaire"
-              align="center"
+          <h2 id="liste-agences" className="sr-only">
+            {cityLabel ? `Agences à ${cityLabel}` : "L'annuaire des agences"}
+          </h2>
+
+          {result === null ? (
+            <Notice
+              role="status"
               title={
                 <>
-                  Nos agences <Highlight>partenaires</Highlight>
+                  Liste momentanément <Highlight>indisponible</Highlight>
                 </>
               }
             >
               <p className="m-0">
-                Choisissez une agence pour voir ses biens à louer et à vendre, puis contactez-la directement depuis sa
-                fiche ou depuis une annonce.
+                Nous n&apos;arrivons pas à charger les agences pour le moment. Réessayez dans quelques instants.
               </p>
-            </SectionHeading>
-          </Reveal>
-
-          {result === null ? (
-            <div role="status" className="ax-alert ax-alert--warning mx-auto mt-12 max-w-xl">
-              <div className="ax-alert__content">
-                <p className="ax-alert__title">Liste momentanément indisponible</p>
-                <p className="ax-alert__message">
-                  Nous n&apos;arrivons pas à charger les agences pour le moment. Réessayez dans quelques instants.
-                </p>
-              </div>
-            </div>
-          ) : result.results.length === 0 ? (
-            <div className="ax-empty mt-6">
-              <IconBuildingCommunity className="ax-empty__icon" stroke={1.5} aria-hidden="true" />
-              <p className="ax-empty__title">Aucune agence pour le moment</p>
-              <p className="m-0">Les premières agences partenaires publient bientôt leurs biens sur Dahoo.</p>
-            </div>
+            </Notice>
+          ) : agencies.length === 0 ? (
+            <Notice
+              title={city ? `Aucune agence à ${cityLabel}` : "Aucune agence pour le moment"}
+              action={
+                city ? (
+                  <Link href="/agences" className="ax-btn ax-btn--secondary ax-btn--lg">
+                    <span className="ax-btn__label">Voir toutes les agences</span>
+                  </Link>
+                ) : undefined
+              }
+            >
+              {!city && <p className="m-0">Les premières agences partenaires publient bientôt leurs biens sur Dahoo.</p>}
+            </Notice>
           ) : (
             <>
-              <ul className="m-0 mt-12 grid list-none gap-6 p-0 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {result.results.map((agency, index) => (
-                  <Reveal as="li" key={agency.id} delay={Math.min(index, 7) * 0.06}>
-                    <AgencyCard agency={agency} />
+              <ul className="m-0 grid list-none grid-cols-2 gap-2 p-0 sm:gap-3 lg:grid-cols-3 lg:gap-4">
+                {agencies.map((agency, index) => (
+                  <Reveal as="li" key={agency.id} delay={(index % 3) * 0.08}>
+                    <AgencyCard agency={agency} listings={showcases[index] ?? []} />
                   </Reveal>
                 ))}
               </ul>
 
-              <Pagination
-                page={page}
-                pageCount={pageCount}
-                hrefFor={(target) => (target === 1 ? "/agences" : `/agences?page=${target}`)}
-                label="Pages de la liste des agences"
-              />
-
-              <p className="text-text-strong m-0 mt-12 flex items-center justify-center gap-2 text-center text-base">
-                <IconCircleCheck size={22} stroke={1.75} aria-hidden="true" className="text-accent-text shrink-0" />
-                <span>
-                  {result.count > 1 ? (
-                    <>
-                      <b>{countLabel(result.count, "agence partenaire", "agences partenaires")}</b> publient leurs biens sur
-                      Dahoo.
-                    </>
-                  ) : (
-                    <>
-                      <b>Une agence partenaire</b> publie ses biens sur Dahoo.
-                    </>
-                  )}
-                </span>
-              </p>
+              {!city && (
+                <Pagination
+                  page={page}
+                  pageCount={pageCount}
+                  hrefFor={(target) => (target === 1 ? "/agences" : `/agences?page=${target}`)}
+                  label="Pages de la liste des agences"
+                />
+              )}
             </>
           )}
         </Container>
-      </Section>
+      </section>
 
       <AgencyCta />
     </>

@@ -171,7 +171,18 @@ export function categoryLabel(category: Category): string {
 
 /** Titre de la liste selon les filtres : « Appartements à louer à Dakar », « Biens à vendre »… */
 export function listingHeadline(listingType: ListingType, filters: Pick<ListingFilters, "category" | "city">): string {
-  const { verb } = LISTING_PAGES[listingType];
-  const subject = filters.category ? CATEGORY_PLURAL[filters.category] : "Biens";
-  return `${subject} ${verb}${filters.city ? ` à ${filters.city}` : ""}`;
+  const { subject, verb, place } = listingHeadlineParts(listingType, filters);
+  return `${subject} ${verb}${place}`;
+}
+
+/** Morceaux du titre, pour mettre la transaction en italique dans le <h1> (« Biens *à louer* à Dakar »). */
+export function listingHeadlineParts(
+  listingType: ListingType,
+  filters: Pick<ListingFilters, "category" | "city">,
+): { subject: string; verb: string; place: string } {
+  return {
+    subject: filters.category ? CATEGORY_PLURAL[filters.category] : "Biens",
+    verb: LISTING_PAGES[listingType].verb,
+    place: filters.city ? ` à ${filters.city}` : "",
+  };
 }

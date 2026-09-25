@@ -22,6 +22,8 @@ export interface ApexChartProps {
   tooltip?: boolean;
   /** Fixed color token/literal — overrides the palette (e.g. KPI sparklines). */
   color?: string | null;
+  /** Palette de la série (jetons `--ax-…` ou couleurs), résolue à la création et à chaque changement de thème. */
+  colors?: string[];
   /** Extra raw ApexCharts options merged last (labels, plotOptions, etc.). */
   apex?: ApexOptions;
   className?: string;
@@ -39,6 +41,7 @@ export function ApexChart({
   stacked,
   tooltip = true,
   color,
+  colors,
   apex,
   className,
   ariaLabel,
@@ -49,10 +52,14 @@ export function ApexChart({
   const chartRef = useRef<{ destroy: () => void; updateOptions: (o: ApexOptions, r?: boolean, a?: boolean, u?: boolean) => void } | null>(null);
   const accentRef = useRef(accent);
   const colorRef = useRef(color);
+  const colorsRef = useRef(colors);
+  const sparklineRef = useRef(sparkline);
   useEffect(() => {
     accentRef.current = accent;
     colorRef.current = color;
-  }, [accent, color]);
+    colorsRef.current = colors;
+    sparklineRef.current = sparkline;
+  }, [accent, color, colors, sparkline]);
 
   // Build/destroy the chart when structural inputs change.
   useEffect(() => {
@@ -62,6 +69,7 @@ export function ApexChart({
 
     const opts: BaseOpts = { type, height, sparkline, accent, legend, stacked, tooltip };
     const fixed = resolveColor(color);
+    const palette = colors?.map((c) => resolveColor(c) ?? c);
 
     import('apexcharts').then(({ default: ApexCharts }) => {
       if (cancelled || !elRef.current) return;
@@ -71,6 +79,7 @@ export function ApexChart({
         base as Record<string, unknown>,
         { series } as Record<string, unknown>,
         fixed ? ({ colors: [fixed] } as Record<string, unknown>) : undefined,
+        palette ? ({ colors: palette } as Record<string, unknown>) : undefined,
         (apex as Record<string, unknown>) || undefined,
       );
       const instance = new ApexCharts(elRef.current, merged);
@@ -86,7 +95,7 @@ export function ApexChart({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [type, height, sparkline, accent, legend, stacked, tooltip, color, JSON.stringify(series), JSON.stringify(apex)]);
+  }, [type, height, sparkline, accent, legend, stacked, tooltip, color, JSON.stringify(colors), JSON.stringify(series), JSON.stringify(apex)]);
 
   // Live re-theme on ax:change (no rebuild).
   useEffect(() => {
@@ -94,7 +103,9 @@ export function ApexChart({
       const inst = chartRef.current;
       if (!inst) return;
       const t = readTokens();
-      const colors = colorRef.current
+      const colors = colorsRef.current
+        ? colorsRef.current.map((c) => resolveColor(c) ?? c)
+        : colorRef.current
         ? [resolveColor(colorRef.current) as string]
         : accentRef.current
           ? [t.accent, ...t.series.slice(1)]
@@ -107,8 +118,13 @@ export function ApexChart({
             chart: { foreColor: t.labelText, animations: { enabled: !t.reduceMotion } },
             grid: { borderColor: t.gridColor },
             tooltip: { theme: t.dark ? 'dark' : 'light' },
-            xaxis: { labels: { style: { colors: t.axisText } } },
-            yaxis: { labels: { style: { colors: t.axisText } } },
+            // Dahoo : sur une sparkline, renvoyer les axes réaffichait leurs étiquettes (« 5 », « ) »).
+            ...(sparklineRef.current
+              ? {}
+              : {
+                  xaxis: { labels: { style: { colors: t.axisText } } },
+                  yaxis: { labels: { style: { colors: t.axisText } } },
+                }),
           } as ApexOptions,
           false,
           false,
@@ -118,8 +134,15 @@ export function ApexChart({
         /* chart destroyed */
       }
     };
+    // `ax:change` (personnaliseur Vireo) et `dahoo:theme-change` (ThemeProvider de Dahoo, sur window).
+    // Le thème est appliqué sur <html> juste avant l'événement : on relit les jetons au rendu suivant.
+    const onDahoo = () => requestAnimationFrame(onChange);
     document.addEventListener('ax:change', onChange);
-    return () => document.removeEventListener('ax:change', onChange);
+    window.addEventListener('dahoo:theme-change', onDahoo);
+    return () => {
+      document.removeEventListener('ax:change', onChange);
+      window.removeEventListener('dahoo:theme-change', onDahoo);
+    };
   }, []);
 
   return (

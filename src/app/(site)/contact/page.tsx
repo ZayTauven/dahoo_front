@@ -1,20 +1,17 @@
-import {
-  IconArrowRight,
-  IconBuildingStore,
-  IconHome,
-  IconKey,
-  IconLogin2,
-  IconMail,
-  IconMessage2,
-  IconReceipt2,
-} from "@tabler/icons-react";
+import { IconArrowRight } from "@tabler/icons-react";
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
+import { Fragment } from "react";
 
 import { Container } from "@/components/site/layout";
-import { Reveal } from "@/components/site/motion";
+import { Highlight, Reveal, RevealLines } from "@/components/site/motion";
+import { Breadcrumbs } from "@/components/site/PageHero";
+import { PHOTOS } from "@/components/site/photos";
+import { Eyebrow } from "@/components/site/SectionHeading";
 
-import { PageBanner } from "../agences/_components/PageBanner";
+import { AgencyMark } from "../agences/_components/AgencyMonogram";
+import { getAgencies } from "../agences/_components/data";
 import { ContactPanel, type ContactProfile } from "./_components/ContactPanel";
 import { DAHOO_CONTACT_EMAIL } from "./_components/demo-request";
 
@@ -25,122 +22,123 @@ export const metadata: Metadata = {
   alternates: { canonical: "/contact" },
 };
 
-const QUICK_LINKS = [
-  { href: "/louer", icon: IconKey, title: "Biens à louer", text: "Toutes les locations du portail" },
-  { href: "/acheter", icon: IconHome, title: "Biens à vendre", text: "Maisons, appartements, terrains" },
-  { href: "/pour-les-agences", icon: IconBuildingStore, title: "Offre agences", text: "Ce que Dahoo fait pour vous" },
-  { href: "/tarifs", icon: IconReceipt2, title: "Tarifs", text: "Les formules d'abonnement" },
-];
+/** Agences partenaires affichées sous les coordonnées (les logos d'abord). */
+const PARTNERS_SHOWN = 6;
 
 export default async function ContactPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const { profil } = await searchParams;
+  const [{ profil }, agencies] = await Promise.all([searchParams, getAgencies(1)]);
   const initialProfile: ContactProfile = profil === "agence" ? "agence" : "particulier";
+  const partners =
+    agencies && agencies !== "page-not-found"
+      ? [...agencies.results].sort((a, b) => Number(Boolean(b.logo)) - Number(Boolean(a.logo))).slice(0, PARTNERS_SHOWN)
+      : [];
+
+  const details = [
+    {
+      label: "Écrire à Dahoo",
+      content: (
+        <a href={`mailto:${DAHOO_CONTACT_EMAIL}`} className="site-link text-inherit">
+          {DAHOO_CONTACT_EMAIL}
+        </a>
+      ),
+    },
+    { label: "Basés à", content: "Dakar, Sénégal" },
+    {
+      label: "Une question sur un bien",
+      content: (
+        <Link href="/agences" className="site-link inline-flex items-center gap-1.5 text-inherit">
+          Trouver l&apos;agence <IconArrowRight size={16} stroke={1.75} aria-hidden="true" />
+        </Link>
+      ),
+    },
+    {
+      label: "Déjà client ?",
+      content: (
+        <Link href="/connexion" className="site-link inline-flex items-center gap-1.5 text-inherit">
+          Espace agence <IconArrowRight size={16} stroke={1.75} aria-hidden="true" />
+        </Link>
+      ),
+    },
+  ];
 
   return (
-    <>
-      <PageBanner
-        eyebrow="Contact"
-        title={
-          <>
-            Une question ? <br className="hidden sm:inline" />
-            Parlons-en.
-          </>
-        }
-        lede="Dites-nous ce que vous cherchez : nous vous orientons vers les bonnes annonces ou vers l'équipe Dahoo."
-        crumbs={[{ label: "Contact" }]}
-        image="/images/site/slider-01.webp"
-        watermark="contact"
-      />
+    <div className="pt-8 pb-16 sm:pt-10 sm:pb-24 lg:pb-28">
+      <Container>
+        <Breadcrumbs crumbs={[{ label: "Contact" }]} />
 
-      <section aria-labelledby="aide" className="pb-16 sm:pb-20 lg:pb-24">
-        <Container className="grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-14">
-          <Reveal
-            delay={0.1}
-            className="border-border-default relative z-10 -mt-10 rounded-2xl border bg-[var(--ax-surface-solid)] p-6 shadow-card sm:-mt-14 sm:p-10 lg:order-2 lg:-mt-24"
+        {/* D'après « Contact 01 » de 21st : à gauche la photo et les coordonnées en étiquettes, à droite le formulaire. */}
+        <div className="mt-6 grid gap-6 sm:mt-8 lg:grid-cols-12 lg:gap-x-10 lg:gap-y-8">
+          <div className="relative isolate flex aspect-[4/3] flex-col justify-end overflow-hidden rounded-md p-5 sm:aspect-[16/10] sm:p-8 lg:col-span-5 lg:row-start-1 lg:aspect-auto lg:min-h-[30rem]">
+            <Image
+              src={PHOTOS.goreePort.src}
+              alt={PHOTOS.goreePort.alt}
+              fill
+              preload
+              sizes="(min-width: 1024px) 40vw, 100vw"
+              className="-z-10 object-cover object-[40%_50%]"
+            />
+            <span aria-hidden="true" className="from-brand-900/85 via-brand-900/30 absolute inset-0 -z-10 bg-linear-to-t to-transparent" />
+            <Eyebrow className="text-white/80 [&>span:first-child]:text-white">Nous pouvons vous aider</Eyebrow>
+            <h1 className="font-display m-0 mt-4 text-[2.7rem] leading-[0.95] font-normal tracking-[-0.03em] text-balance text-white sm:text-6xl">
+              <RevealLines
+                play="mount"
+                delay={0.1}
+                lines={[
+                  <Fragment key="titre">
+                    Une question&nbsp;? <Highlight>Parlons-en.</Highlight>
+                  </Fragment>,
+                ]}
+              />
+            </h1>
+          </div>
+
+          <section
+            aria-labelledby="aide"
+            className="bg-surface-solid flex flex-col gap-6 rounded-md p-5 sm:p-8 lg:col-span-7 lg:col-start-6 lg:row-span-2 lg:row-start-1 lg:p-10"
           >
-            <h2 id="aide" className="font-display text-text-strong m-0 mb-6 text-3xl leading-tight font-semibold sm:text-4xl">
-              Comment pouvons-nous vous aider ?
-            </h2>
+            <Eyebrow index="01" as="h2" id="aide">
+              Comment pouvons-nous vous aider&nbsp;?
+            </Eyebrow>
             <ContactPanel initialProfile={initialProfile} />
+          </section>
+
+          <Reveal className="lg:col-span-5 lg:row-start-2">
+            <section aria-labelledby="coordonnees-dahoo" className="flex flex-col gap-6">
+              <Eyebrow index="02" as="h2" id="coordonnees-dahoo">
+                Nous écrire
+              </Eyebrow>
+              <dl className="m-0 grid grid-cols-2 gap-x-6 gap-y-6">
+                {details.map((item) => (
+                  <div key={item.label} className="flex min-w-0 flex-col gap-1.5">
+                    <dt className="site-label text-text-muted">{item.label}</dt>
+                    <dd className="text-text-strong m-0 text-base font-medium [overflow-wrap:anywhere]">{item.content}</dd>
+                  </div>
+                ))}
+              </dl>
+
+              {partners.length > 0 && (
+                <div className="border-border-default flex flex-col gap-4 border-t pt-6">
+                  <p className="site-label text-text-muted m-0">Elles publient sur Dahoo</p>
+                  <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
+                    {partners.map((agency) => (
+                      <li key={agency.id}>
+                        <Link
+                          href={`/agences/${agency.id}`}
+                          title={agency.name}
+                          className="block rounded-sm transition-transform duration-500 hover:-translate-y-0.5"
+                        >
+                          <AgencyMark name={agency.name} logo={agency.logo} sizes="56px" className="size-12 text-lg sm:size-14 sm:text-xl" />
+                          <span className="sr-only">{agency.name}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </section>
           </Reveal>
-
-          <Reveal className="flex flex-col gap-10 lg:order-1 lg:pt-16">
-            <div className="flex flex-col gap-3">
-              <h2 className="font-display text-text-strong m-0 flex items-center gap-3 text-2xl font-semibold">
-                <span className="bg-accent-wash text-accent-text inline-flex size-11 items-center justify-center rounded-full">
-                  <IconMail size={22} stroke={1.75} aria-hidden="true" />
-                </span>
-                Écrire à Dahoo
-              </h2>
-              <p className="text-text-muted m-0 leading-relaxed">
-                Pour une question sur la plateforme, un partenariat ou la presse, écrivez-nous :
-              </p>
-              <a href={`mailto:${DAHOO_CONTACT_EMAIL}`} className="text-link self-start text-lg font-semibold break-all">
-                {DAHOO_CONTACT_EMAIL}
-              </a>
-            </div>
-
-            <div className="border-border-default flex flex-col gap-3 border-t pt-8">
-              <h2 className="font-display text-text-strong m-0 flex items-center gap-3 text-2xl font-semibold">
-                <span className="bg-accent-wash text-accent-text inline-flex size-11 items-center justify-center rounded-full">
-                  <IconMessage2 size={22} stroke={1.75} aria-hidden="true" />
-                </span>
-                Une question sur un bien
-              </h2>
-              <p className="text-text-muted m-0 leading-relaxed">
-                Chaque annonce est gérée par une agence partenaire. Pour visiter un bien ou en savoir plus, utilisez le
-                bouton de demande sur la fiche de l&apos;annonce, ou contactez directement l&apos;agence.
-              </p>
-              <Link href="/agences" className="text-link inline-flex items-center gap-1.5 self-start font-semibold">
-                Trouver une agence
-                <IconArrowRight size={16} stroke={2} aria-hidden="true" />
-              </Link>
-            </div>
-
-            <div className="border-border-default flex flex-col gap-3 border-t pt-8">
-              <h2 className="font-display text-text-strong m-0 flex items-center gap-3 text-2xl font-semibold">
-                <span className="bg-accent-wash text-accent-text inline-flex size-11 items-center justify-center rounded-full">
-                  <IconLogin2 size={22} stroke={1.75} aria-hidden="true" />
-                </span>
-                Déjà client ?
-              </h2>
-              <p className="text-text-muted m-0 leading-relaxed">
-                Votre agence utilise déjà Dahoo ? Connectez-vous à votre espace pour gérer vos biens et vos annonces.
-              </p>
-              <Link href="/connexion" className="text-link inline-flex items-center gap-1.5 self-start font-semibold">
-                Accéder à l&apos;espace agence
-                <IconArrowRight size={16} stroke={2} aria-hidden="true" />
-              </Link>
-            </div>
-          </Reveal>
-        </Container>
-      </section>
-
-      <section aria-labelledby="raccourcis" className="bg-surface-subtle py-12 sm:py-16">
-        <Container>
-          <h2 id="raccourcis" className="sr-only">
-            Accès rapides
-          </h2>
-          <ul className="m-0 grid list-none gap-4 p-0 sm:grid-cols-2 lg:grid-cols-4">
-            {QUICK_LINKS.map(({ icon: LinkIcon, ...link }, index) => (
-              <Reveal as="li" key={link.href} delay={index * 0.06}>
-                <Link
-                  href={link.href}
-                  className="group hover:border-brand flex h-full items-center gap-4 rounded-xl border border-transparent p-3 no-underline transition-colors"
-                >
-                  <span className="bg-brand-600 inline-flex size-14 shrink-0 items-center justify-center rounded-xl text-white">
-                    <LinkIcon size={26} stroke={1.5} aria-hidden="true" />
-                  </span>
-                  <span className="flex flex-col">
-                    <span className="font-display text-text-strong text-lg font-semibold group-hover:text-brand">{link.title}</span>
-                    <span className="text-text-muted text-sm">{link.text}</span>
-                  </span>
-                </Link>
-              </Reveal>
-            ))}
-          </ul>
-        </Container>
-      </section>
-    </>
+        </div>
+      </Container>
+    </div>
   );
 }

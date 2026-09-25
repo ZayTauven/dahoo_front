@@ -21,11 +21,11 @@
   transform: none;
 }
 
-/* Nom de l'agence active dans l'en-tête de l'espace agence. */
+/* Nom de l'agence active dans l'en-tête de l'espace agence (suit le schéma de l'en-tête). */
 .ax-header__org {
   font-family: var(--ax-font-display);
   font-weight: var(--ax-weight-semibold);
-  color: var(--ax-text-strong);
+  color: var(--ax-header-fg-strong, var(--ax-text-strong));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -65,7 +65,33 @@
   color: var(--ax-brand);
 }
 
-/* Tiroir mobile : fond opaque (le verre de la sidebar laissait voir le contenu dessous). */
-[data-ax-drawer='open'] .ax-sidebar {
+/* Tiroir mobile : fond opaque (le verre de la sidebar laissait voir le contenu dessous). Les schémas
+   sombre, accent et dégradé du personnaliseur ont déjà un fond plein : on ne les écrase pas. */
+[data-ax-drawer='open']:is(:not([data-ax-sidebar]), [data-ax-sidebar='light'], [data-ax-sidebar='transparent']) .ax-sidebar {
   background: var(--ax-surface-solid);
+}
+
+/* ── Personnaliseur d'apparence ── */
+
+/* Entrée du tiroir (Vireo s'appuyait sur les transitions d'Alpine). */
+@keyframes dahoo-customizer-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+.ax-customizer--enter {
+  animation: dahoo-customizer-in var(--ax-motion-slow) var(--ax-ease-emphasized);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ax-customizer--enter {
+    animation: none;
+  }
+}
+
+/* « Dépliée » et « Icônes » masquent le bouton de repli ; sur mobile il ouvre le menu : on le garde. */
+@media (max-width: 767.98px) {
+  [data-ax-sidebar-behavior] .ax-nav-toggle {
+    display: inline-flex;
+  }
 }

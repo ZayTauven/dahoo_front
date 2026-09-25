@@ -1,0 +1,209 @@
+/*
+ * Dahoo — langage visuel du site public (« sable & encre »).
+ *
+ * Tout est limité à `.site` (posé par le layout du groupe (site)) : l'espace agence garde Vireo.
+ * On surcharge les rôles --ax-* plutôt que d'inventer des utilitaires, pour que toutes les pages
+ * du site (et les classes Tailwind bg-canvas, text-text-muted…) adoptent la charte d'un coup.
+ * Les gris dérivent de l'encre et du sable par mélange : une seule famille de teintes, et le thème
+ * section sombre s'obtient en inversant les deux couleurs de base.
+ * Le site n'existe qu'en thème clair (ThemeProvider force le clair hors de l'espace connecté) : pas de variante sombre ici.
+ * Contrastes vérifiés (WCAG AA) : texte courant 9,1, atténué 5,6, discret 4,7 sur le sable.
+ */
+
+.site {
+  --site-ink: #12153a; /* encre indigo, dérivée de l'indigo du logo */
+  --site-sand: #f2ede4; /* fond sable */
+  --site-sand-2: #e8e0d3; /* sable plus soutenu (sections alternées) */
+  --site-paper: #fbf8f3; /* papier (cartes, champs) */
+  --site-deep: #12153a; /* sections sombres */
+  --site-deep-text: #f2ede4;
+  --site-ease: cubic-bezier(0.16, 1, 0.3, 1); /* sortie « expo » des animations */
+
+  --ax-font-sans: var(--font-site-sans), ui-sans-serif, system-ui, sans-serif;
+  --ax-font-display: var(--font-site-serif), "Times New Roman", Georgia, serif;
+  --ax-font-mono: var(--font-site-mono), ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Rayons resserrés : l'éditorial vit d'angles nets, pas de coussins. */
+  --ax-radius-xs: 3px;
+  --ax-radius-sm: 4px;
+  --ax-radius-md: 6px;
+  --ax-radius-lg: 8px;
+  --ax-radius-xl: 10px;
+
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  font-size: 1rem;
+  letter-spacing: -0.011em;
+  font-feature-settings: normal;
+  color: var(--ax-text);
+  background: var(--ax-canvas);
+  /* Instrument Serif n'existe qu'en 400 : jamais de gras simulé. */
+  font-synthesis-weight: none;
+}
+
+/* Rôles dérivés : redéclarés sur chaque portée qui change l'encre ou le sable (les var() d'une
+   propriété personnalisée sont résolues là où elle est déclarée, pas là où elle est lue). */
+.site,
+.site .site-dark {
+  --ax-canvas: var(--site-sand);
+  --ax-surface: var(--site-paper);
+  --ax-surface-solid: var(--site-paper);
+  --ax-surface-subtle: var(--site-sand-2);
+  --ax-surface-raised: color-mix(in oklab, var(--site-sand) 88%, transparent);
+  --ax-surface-overlay: var(--site-paper);
+  --ax-fill-hover: color-mix(in oklab, var(--site-ink) 6%, transparent);
+  --ax-fill-active: color-mix(in oklab, var(--site-ink) 10%, transparent);
+  --ax-border: color-mix(in oklab, var(--site-ink) 14%, transparent);
+  --ax-border-strong: color-mix(in oklab, var(--site-ink) 26%, transparent);
+  --ax-text-strong: var(--site-ink);
+  --ax-text: color-mix(in oklab, var(--site-ink) 82%, var(--site-sand));
+  --ax-text-muted: color-mix(in oklab, var(--site-ink) 68%, var(--site-sand));
+  --ax-text-subtle: color-mix(in oklab, var(--site-ink) 62%, var(--site-sand));
+  --ax-link: var(--site-ink);
+  --ax-brand: var(--site-ink);
+
+}
+
+/* Section sombre (appel aux agences, pied de page) : on inverse l'encre et le sable. */
+.site .site-dark {
+  --site-ink: var(--site-deep-text);
+  --site-sand: var(--site-deep);
+  --site-sand-2: color-mix(in oklab, var(--site-deep) 88%, white);
+  --site-paper: color-mix(in oklab, var(--site-deep) 92%, white);
+  --ax-accent-text: #f9a43f;
+  color: var(--ax-text);
+  background: var(--ax-canvas);
+}
+
+:where(.site h1, .site h2) {
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.site ::selection {
+  background: var(--ax-accent);
+  color: var(--ax-on-accent);
+}
+
+/* ── Grain : casse la planéité du fond (bruit SVG fixe, ne capte aucun clic). ── */
+.site::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+  opacity: 0.07;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── Étiquette : petites capitales en chasse fixe (sur-titres, compteurs, métadonnées). ── */
+.site-label {
+  font-family: var(--ax-font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ── Lien souligné qui se dessine au survol. ── */
+.site-link {
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 100% 100%;
+  background-size: 0% 1px;
+  transition: background-size 0.6s var(--site-ease);
+}
+.site-link:hover,
+.site-link:focus-visible,
+.site-link[aria-current='page'] {
+  background-position: 0% 100%;
+  background-size: 100% 1px;
+}
+
+/* ── Boutons du site : pilules d'encre, l'orange arrive au survol. ── */
+.site .ax-btn {
+  border-radius: var(--ax-radius-pill);
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  transition:
+    background-color 0.45s var(--site-ease),
+    color 0.45s var(--site-ease),
+    border-color 0.45s var(--site-ease),
+    transform 0.2s var(--site-ease);
+}
+.site .ax-btn:active {
+  transform: scale(0.97);
+}
+.site .ax-btn--lg {
+  --_btn-h: 3.25rem;
+  --_btn-px: 1.6rem;
+  --_btn-fz: 0.95rem;
+}
+.site .ax-btn--primary,
+.site .ax-btn--solid {
+  color: var(--site-sand);
+  background: var(--site-ink);
+  box-shadow: none;
+  filter: none;
+}
+.site .ax-btn--primary:hover,
+.site .ax-btn--solid:hover {
+  color: var(--ax-on-accent);
+  background: var(--ax-accent);
+  box-shadow: none;
+  filter: none;
+}
+.site .ax-btn--secondary,
+.site .ax-btn--outline {
+  color: var(--ax-text-strong);
+  border-color: var(--ax-border-strong);
+}
+.site .ax-btn--secondary:hover,
+.site .ax-btn--outline:hover {
+  color: var(--site-sand);
+  background: var(--site-ink);
+  border-color: var(--site-ink);
+}
+.site .site-dark .ax-btn--primary {
+  color: var(--ax-on-accent);
+  background: var(--ax-accent);
+}
+.site .site-dark .ax-btn--primary:hover {
+  color: var(--site-deep);
+  background: var(--site-deep-text);
+}
+
+/* Champs : fond papier, filet fin. Les états focus et erreur de components.css restent maîtres :
+   la bordure et l'ombre ne sont surchargées qu'au repos (même couche, sinon cette règle, déclarée
+   plus tard, effacerait le focus visible et la bordure d'erreur). */
+.site :is(.ax-input, .ax-select, .ax-textarea) {
+  background-color: var(--site-paper);
+}
+.site :is(.ax-input, .ax-select, .ax-textarea):not(:focus, .is-invalid, [aria-invalid='true']) {
+  border-color: var(--ax-border-strong);
+  box-shadow: none;
+}
+
+/* ── Défilement horizontal continu (bandeaux). ── */
+.site-marquee {
+  display: flex;
+  width: max-content;
+  animation: site-marquee var(--site-marquee-duration, 40s) linear infinite;
+}
+.site-marquee:hover {
+  animation-play-state: paused;
+}
+@keyframes site-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-marquee {
+    animation: none;
+  }
+}

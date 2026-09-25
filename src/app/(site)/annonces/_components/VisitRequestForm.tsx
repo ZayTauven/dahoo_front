@@ -1,11 +1,9 @@
 "use client";
 
-import { IconAlertTriangle, IconCircleCheck, IconSend } from "@tabler/icons-react";
 import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 
-import { TextareaField, TextField } from "@/components/app/ui/fields";
-import { cn } from "@/lib/utils";
+import { FormAlert, Honeypot, SiteTextareaField, SiteTextField, SubmitButton } from "@/components/site/form";
 
 import { requestVisit } from "../[id]/actions";
 import { INITIAL_VISIT_STATE, VISIT_LIMITS, type VisitRequestState } from "./visit-request";
@@ -50,16 +48,25 @@ export function VisitRequestForm({
         ref={successRef}
         tabIndex={-1}
         role="status"
-        className="bg-accent-wash flex flex-col items-start gap-3 rounded-lg p-5 outline-none focus-visible:ring-2 focus-visible:ring-[var(--ax-accent)]"
+        className="border-text-strong focus-visible:outline-text-strong flex flex-col items-start gap-4 border-t pt-6 outline-none focus-visible:outline-2 focus-visible:outline-offset-4"
       >
-        <IconCircleCheck size={32} stroke={1.75} className="text-success" aria-hidden="true" />
-        <p className="font-display text-text-strong m-0 text-lg font-semibold">Demande envoyée</p>
-        <p className="text-text m-0 text-sm leading-relaxed">
+        <p className="site-label text-text-muted m-0 flex items-center gap-3">
+          <span aria-hidden="true" className="bg-accent size-1.5 rounded-full" />
+          Demande transmise
+        </p>
+        <p className="font-display text-text-strong m-0 text-4xl leading-none tracking-tight">
+          Demande <em className="italic">envoyée</em>
+        </p>
+        <p className="text-text m-0 leading-relaxed">
           {agencyName} a bien reçu votre demande de visite et vous rappellera au numéro indiqué pour convenir d&apos;un
           rendez-vous.
         </p>
-        <button type="button" className="ax-btn ax-btn--ghost ax-btn--sm -ml-2" onClick={() => setDismissed(state)}>
-          <span className="ax-btn__label">Envoyer une autre demande</span>
+        <button
+          type="button"
+          className="site-link text-text-strong cursor-pointer border-0 bg-transparent p-0 font-medium"
+          onClick={() => setDismissed(state)}
+        >
+          Envoyer une autre demande
         </button>
       </div>
     );
@@ -69,24 +76,20 @@ export function VisitRequestForm({
   const fields = state.fields ?? {};
 
   return (
-    <form ref={formRef} action={formAction} className="flex flex-col gap-4" aria-busy={pending} noValidate>
+    <form ref={formRef} action={formAction} className="flex flex-col gap-6" aria-busy={pending} noValidate>
       {state.status === "error" && state.message && (
-        <div role="alert" className="ax-alert ax-alert--danger">
-          <IconAlertTriangle className="ax-alert__icon" stroke={1.75} aria-hidden="true" />
-          <div className="ax-alert__content">
-            <p className="ax-alert__message m-0">{state.message}</p>
-            {state.gone && (
-              <Link href={browseHref} className="text-link mt-1 inline-block text-sm font-semibold">
-                Voir les autres annonces
-              </Link>
-            )}
-          </div>
-        </div>
+        <FormAlert title={state.message}>
+          {state.gone && (
+            <Link href={browseHref} className="site-link text-text-strong text-sm font-medium">
+              Voir les autres annonces
+            </Link>
+          )}
+        </FormAlert>
       )}
 
-      <fieldset disabled={pending || state.gone} className="m-0 flex min-w-0 flex-col gap-4 border-0 p-0">
+      <fieldset disabled={pending || state.gone} className="relative m-0 flex min-w-0 flex-col gap-6 border-0 p-0">
         <legend className="sr-only">Vos coordonnées</legend>
-        <TextField
+        <SiteTextField
           label="Nom complet"
           name="full_name"
           autoComplete="name"
@@ -95,7 +98,7 @@ export function VisitRequestForm({
           defaultValue={values?.full_name ?? ""}
           error={fields.full_name}
         />
-        <TextField
+        <SiteTextField
           label="Téléphone"
           name="phone"
           type="tel"
@@ -107,7 +110,7 @@ export function VisitRequestForm({
           hint="Exemple : 77 123 45 67"
           error={fields.phone}
         />
-        <TextField
+        <SiteTextField
           label="E-mail (facultatif)"
           name="email"
           type="email"
@@ -116,7 +119,7 @@ export function VisitRequestForm({
           defaultValue={values?.email ?? ""}
           error={fields.email}
         />
-        <TextareaField
+        <SiteTextareaField
           label="Message"
           name="message"
           rows={4}
@@ -125,24 +128,12 @@ export function VisitRequestForm({
           hint="Précisez vos disponibilités pour la visite."
           error={fields.message}
         />
-        {/* Champ piège pour les robots, invisible et hors du parcours clavier. */}
-        <div aria-hidden="true" className="hidden">
-          <label>
-            Site web
-            <input type="text" name="website" tabIndex={-1} autoComplete="off" defaultValue="" />
-          </label>
-        </div>
+        <Honeypot name="website" />
       </fieldset>
 
-      <button
-        type="submit"
-        disabled={pending || state.gone}
-        className={cn("ax-btn ax-btn--primary ax-btn--block ax-btn--lg", pending && "is-loading")}
-      >
-        <IconSend className="ax-btn__icon" stroke={1.75} aria-hidden="true" />
-        <span className="ax-btn__label">{pending ? "Envoi en cours…" : "Demander une visite"}</span>
-        {pending && <span className="ax-btn__spinner" aria-hidden="true" />}
-      </button>
+      <SubmitButton pending={pending} disabled={state.gone} block>
+        Demander une visite
+      </SubmitButton>
 
       <p className="text-text-muted m-0 text-xs leading-relaxed">
         Vos coordonnées sont transmises uniquement à {agencyName}, qui vous recontactera au sujet de ce bien.

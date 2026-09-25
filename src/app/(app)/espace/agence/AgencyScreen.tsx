@@ -9,6 +9,7 @@ import { api } from "@/lib/api/client";
 import { unwrap } from "@/lib/api/errors";
 import { useSession } from "@/lib/auth/useSession";
 
+import { AppearanceCard } from "./_components/AppearanceCard";
 import { ORGANIZATION_KEY, OrganizationCard } from "./_components/OrganizationCard";
 import { SubscriptionCard } from "./_components/SubscriptionCard";
 
@@ -97,7 +98,10 @@ export function AgencyScreen() {
       {head}
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <OrganizationCard organization={organization.data} editable={canEdit && !isReadOnly} readOnlyReason={readOnlyReason} />
-        <SubscriptionCard organization={organization.data} canViewSubscriptions={can("subscription.view")} />
+        <div className="flex flex-col gap-6">
+          <SubscriptionCard organization={organization.data} canViewSubscriptions={can("subscription.view")} />
+          <AppearanceCard />
+        </div>
       </div>
     </>
   );

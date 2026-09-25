@@ -1,8 +1,9 @@
 "use client";
 
-import { IconSearch } from "@tabler/icons-react";
+import { IconArrowRight, IconChevronDown } from "@tabler/icons-react";
+import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
-import { useId, useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent, type ReactNode } from "react";
 
 import { formatMoney } from "@/lib/format";
 import { UNIT_CATEGORY } from "@/lib/labels";
@@ -29,10 +30,34 @@ export interface SearchCity {
   listings_count: number;
 }
 
-const fieldLabel = "text-text-muted mb-1.5 block text-xs font-semibold tracking-wide uppercase";
+const control =
+  "text-text-strong w-full cursor-pointer appearance-none border-0 bg-transparent p-0 pr-6 text-base leading-snug outline-none";
+
+/** Cellule de la barre : étiquette en chasse fixe au-dessus d'un champ sans bordure. */
+function Field({ id, label, children, className }: { id: string; label: string; children: ReactNode; className?: string }) {
+  return (
+    <div
+      className={cn(
+        "focus-within:bg-surface-subtle relative flex min-w-0 flex-col gap-1 rounded-full px-5 py-2.5 transition-colors sm:py-3.5 lg:px-6",
+        className,
+      )}
+    >
+      <label htmlFor={id} className="site-label text-text-muted cursor-pointer">
+        {label}
+      </label>
+      {children}
+      <IconChevronDown
+        size={16}
+        stroke={1.75}
+        aria-hidden="true"
+        className="text-text-muted pointer-events-none absolute right-5 bottom-4 lg:right-6"
+      />
+    </div>
+  );
+}
 
 /**
- * Recherche du hero : Louer / Acheter, ville, type de bien, budget maximum.
+ * Recherche du hero : Louer / Acheter, ville, type de bien, budget maximum, dans une barre « papier ».
  * Formulaire GET classique (fonctionne sans JavaScript vers /louer) ; avec JavaScript,
  * on retire les champs vides de l'URL et on navigue côté client.
  */
@@ -62,43 +87,52 @@ export function SearchBar({ cities, className }: { cities: SearchCity[]; classNa
       role="search"
       aria-label="Rechercher un bien"
       onSubmit={onSubmit}
-      className={cn("w-full", className)}
+      className={cn("flex w-full flex-col gap-3", className)}
     >
-      <fieldset className="m-0 flex border-0 p-0">
+      <fieldset className="m-0 flex self-start rounded-full border border-white/25 p-1 backdrop-blur-md">
         <legend className="sr-only">Je souhaite</legend>
-        {MODES.map((item) => (
-          <label key={item.value} className="cursor-pointer">
-            <input
-              type="radio"
-              name="type"
-              value={item.value}
-              checked={mode === item.value}
-              onChange={() => {
-                setMode(item.value);
-                setBudget("");
-              }}
-              className="peer sr-only"
-            />
-            <span
-              className={cn(
-                "font-display flex min-h-11 items-center rounded-t-lg px-6 text-base font-semibold transition-colors",
-                "peer-focus-visible:outline-accent peer-focus-visible:outline-2 peer-focus-visible:-outline-offset-2",
-                mode === item.value ? "bg-surface-solid text-text-strong" : "bg-brand-900/60 text-white hover:bg-brand-900/80",
+        {MODES.map((item) => {
+          const selected = mode === item.value;
+          return (
+            <label key={item.value} className="relative cursor-pointer">
+              <input
+                type="radio"
+                name="type"
+                value={item.value}
+                checked={selected}
+                onChange={() => {
+                  setMode(item.value);
+                  setBudget("");
+                }}
+                className="peer sr-only"
+              />
+              {selected && (
+                <motion.span
+                  layoutId="recherche-mode"
+                  aria-hidden="true"
+                  className="bg-surface-solid absolute inset-0 rounded-full"
+                  transition={{ type: "spring", stiffness: 380, damping: 34 }}
+                />
               )}
-            >
-              {item.label}
-            </span>
-          </label>
-        ))}
+              <span
+                className={cn(
+                  "relative flex h-9 items-center rounded-full px-5 text-sm font-medium transition-colors duration-300",
+                  "peer-focus-visible:outline-accent peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2",
+                  selected ? "text-text-strong" : "text-white hover:text-white/80",
+                )}
+              >
+                {item.label}
+              </span>
+            </label>
+          );
+        })}
       </fieldset>
 
-      <div className="bg-surface-solid grid gap-4 rounded-tr-xl rounded-b-xl p-4 shadow-[0_24px_60px_-30px_rgba(20,27,71,0.6)] sm:grid-cols-2 sm:p-5 lg:grid-cols-[1.2fr_1.2fr_1fr_auto] lg:items-end">
-        <div>
-          <label htmlFor={`${id}-city`} className={fieldLabel}>
-            Ville
-          </label>
+      {/* Mobile : ville + bouton sur une ligne (type et budget se choisissent ensuite sur la liste). */}
+      <div className="bg-surface-solid text-text-strong grid grid-cols-[1fr_auto] items-center overflow-hidden rounded-full p-1.5 shadow-[0_40px_80px_-40px_rgba(8,10,30,0.7)] sm:grid-cols-2 sm:rounded-3xl lg:grid-cols-[1.1fr_1.1fr_1fr_auto] lg:rounded-full">
+        <Field id={`${id}-city`} label="Ville">
           {cities.length > 0 ? (
-            <select id={`${id}-city`} name="city" defaultValue="" className="ax-select ax-select--lg">
+            <select id={`${id}-city`} name="city" defaultValue="" className={control}>
               <option value="">Toutes les villes</option>
               {cities.map((item) => (
                 <option key={item.city} value={item.city}>
@@ -113,16 +147,13 @@ export function SearchBar({ cities, className }: { cities: SearchCity[]; classNa
               type="text"
               placeholder="Dakar, Saly, Thiès…"
               autoComplete="address-level2"
-              className="ax-input ax-input--lg"
+              className={cn(control, "cursor-text")}
             />
           )}
-        </div>
+        </Field>
 
-        <div>
-          <label htmlFor={`${id}-category`} className={fieldLabel}>
-            Type de bien
-          </label>
-          <select id={`${id}-category`} name="category" defaultValue="" className="ax-select ax-select--lg">
+        <Field id={`${id}-category`} label="Type de bien" className="hidden sm:flex">
+          <select id={`${id}-category`} name="category" defaultValue="" className={control}>
             <option value="">Tous les types</option>
             {Object.entries(UNIT_CATEGORY).map(([value, entry]) => (
               <option key={value} value={value}>
@@ -130,18 +161,15 @@ export function SearchBar({ cities, className }: { cities: SearchCity[]; classNa
               </option>
             ))}
           </select>
-        </div>
+        </Field>
 
-        <div>
-          <label htmlFor={`${id}-budget`} className={fieldLabel}>
-            Budget max.
-          </label>
+        <Field id={`${id}-budget`} label="Budget max." className="hidden sm:flex">
           <select
             id={`${id}-budget`}
             name="max_price"
             value={budget}
             onChange={(event) => setBudget(event.target.value)}
-            className="ax-select ax-select--lg"
+            className={control}
           >
             <option value="">Sans limite</option>
             {BUDGETS[mode].map((amount) => (
@@ -150,12 +178,23 @@ export function SearchBar({ cities, className }: { cities: SearchCity[]; classNa
               </option>
             ))}
           </select>
-        </div>
+        </Field>
 
-        <button type="submit" className="ax-btn ax-btn--primary ax-btn--lg ax-btn--block lg:min-w-40">
-          <IconSearch className="ax-btn__icon" stroke={2} aria-hidden="true" />
-          <span className="ax-btn__label">Rechercher</span>
-        </button>
+        <div className="sm:col-span-2 sm:p-1 lg:col-span-1 lg:p-0">
+          <button
+            type="submit"
+            aria-label="Rechercher"
+            className="group bg-text-strong text-canvas hover:bg-accent hover:text-on-accent flex size-13 items-center justify-center gap-3 rounded-full text-base font-medium transition-colors duration-500 sm:h-14 sm:w-full sm:px-7 lg:h-15"
+          >
+            <span className="hidden sm:inline">Rechercher</span>
+            <IconArrowRight
+              size={18}
+              stroke={1.75}
+              aria-hidden="true"
+              className="transition-transform duration-500 group-hover:translate-x-1"
+            />
+          </button>
+        </div>
       </div>
     </form>
   );

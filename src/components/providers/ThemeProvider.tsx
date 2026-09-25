@@ -2,7 +2,9 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useSyncExternalStore, type ReactNode } from "react";
 
-import { applyCollapsed, applyTheme, readMode, type ResolvedTheme, type ThemeMode } from "@/lib/theme";
+import { usePathname } from "next/navigation";
+
+import { applyCollapsed, applyTheme, isThemedPath, readMode, resolveTheme, type ResolvedTheme, type ThemeMode } from "@/lib/theme";
 
 interface ThemeContextValue {
   mode: ThemeMode;
@@ -35,13 +37,24 @@ const readResolved = (): ResolvedTheme =>
 const readCollapsed = (): boolean => document.documentElement.hasAttribute("data-ax-collapsed");
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const themed = isThemedPath(pathname);
   const mode = useSyncExternalStore(subscribe, readMode, () => "system" as ThemeMode);
   const resolved = useSyncExternalStore(subscribe, readResolved, () => "light" as ResolvedTheme);
   const collapsed = useSyncExternalStore(subscribe, readCollapsed, () => false);
 
+  // Site public et connexion : toujours en clair ; espace connecté : la préférence. Réappliqué à
+  // chaque navigation côté client (THEME_SCRIPT ne s'exécute qu'au premier chargement).
+  useEffect(() => {
+    const next = themed ? resolveTheme(readMode()) : "light";
+    if (document.documentElement.getAttribute("data-ax-theme") === next) return;
+    document.documentElement.setAttribute("data-ax-theme", next);
+    notify();
+  }, [themed]);
+
   // En mode « système », suivre les changements du système d'exploitation.
   useEffect(() => {
-    if (mode !== "system") return;
+    if (mode !== "system" || !themed) return;
     const query = window.matchMedia("(prefers-color-scheme: dark)");
     const onChange = () => {
       applyTheme("system");
@@ -49,7 +62,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     };
     query.addEventListener("change", onChange);
     return () => query.removeEventListener("change", onChange);
-  }, [mode]);
+  }, [mode, themed]);
 
   const setMode = useCallback((next: ThemeMode) => {
     applyTheme(next);

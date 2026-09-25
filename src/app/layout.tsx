@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono, Urbanist } from "next/font/google";
+import { Geist, Geist_Mono, Inter, Instrument_Serif, JetBrains_Mono, Urbanist } from "next/font/google";
 import type { ReactNode } from "react";
 
+import { InlineScript } from "@/components/providers/InlineScript";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { SITE_URL } from "@/lib/config";
@@ -12,6 +13,13 @@ import "@/styles/app.css";
 const sans = Inter({ subsets: ["latin"], variable: "--font-dahoo-sans", display: "swap" });
 const display = Urbanist({ subsets: ["latin"], weight: ["500", "600", "700", "800"], variable: "--font-dahoo-display", display: "swap" });
 const mono = JetBrains_Mono({ subsets: ["latin"], weight: ["500", "600"], variable: "--font-dahoo-mono", display: "swap" });
+
+// Site public : titres en serif éditorial, texte en Geist, étiquettes et chiffres en Geist Mono.
+const siteSerif = Instrument_Serif({ subsets: ["latin"], weight: "400", style: ["normal", "italic"], variable: "--font-site-serif", display: "swap" });
+const siteSans = Geist({ subsets: ["latin"], variable: "--font-site-sans", display: "swap" });
+const siteMono = Geist_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-site-mono", display: "swap" });
+
+const FONT_VARIABLES = [sans, display, mono, siteSerif, siteSans, siteMono].map((font) => font.variable).join(" ");
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -36,9 +44,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     // Le script de thème modifie <html> avant l'hydratation : l'écart est voulu.
-    <html lang="fr" className={`${sans.variable} ${display.variable} ${mono.variable}`} suppressHydrationWarning>
+    <html lang="fr" className={FONT_VARIABLES} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <InlineScript html={THEME_SCRIPT} />
       </head>
       <body>
         <ThemeProvider>

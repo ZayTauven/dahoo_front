@@ -30,7 +30,9 @@ export function parseHex(hex: unknown): RGB | null {
 
 export function toHex({ r, g, b }: RGB): string {
   const c = (n: number) =>
-    Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, '0');
+    Math.max(0, Math.min(255, Math.round(n)))
+      .toString(16)
+      .padStart(2, '0');
   return '#' + c(r) + c(g) + c(b);
 }
 
@@ -95,4 +97,22 @@ export function deriveRamp(hex: string): Record<string, string> {
     '--ax-on-accent': onColor(hex),
     '--ax-chart-1': toHex(base),
   };
+}
+
+/** Luminance relative WCAG 2 (0-1), pour les calculs de contraste. */
+export function relativeLuminance({ r, g, b }: RGB): number {
+  const channel = (c: number) => {
+    const v = c / 255;
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+}
+
+/** Rapport de contraste WCAG entre deux couleurs hexadécimales (1 à 21). */
+export function contrastRatio(a: string, b: string): number {
+  const x = parseHex(a);
+  const y = parseHex(b);
+  if (!x || !y) return 1;
+  const [hi, lo] = [relativeLuminance(x), relativeLuminance(y)].sort((p, q) => q - p);
+  return (hi + 0.05) / (lo + 0.05);
 }

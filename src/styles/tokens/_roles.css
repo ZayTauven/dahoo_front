@@ -53,6 +53,10 @@
   --ax-accent-rgb:      247, 148, 29;             /* #F7941D → for glow shadows/alpha fills */
   --ax-link:            var(--ax-brand-600);      /* #283891 */
   --ax-accent-text:     var(--ax-accent-800);     /* texte orange lisible sur fond clair : 6.5 */
+  /* rails en dégradé du personnaliseur (voir schemes.css) : orange clair, encre indigo (≥ 7.2) */
+  --ax-gradient-from:   var(--ax-accent-300);
+  --ax-gradient-to:     var(--ax-accent-500);
+  --ax-on-gradient:     var(--ax-brand-900);
   --ax-focus-ring:      var(--ax-accent-500);     /* #F7941D */
   /* soft translucent focus halo — blends over any surface (card/canvas/glass),
      replaces the old hard canvas-gap double-ring. Per-accent via --ax-accent-rgb. */

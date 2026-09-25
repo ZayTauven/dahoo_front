@@ -1,5 +1,6 @@
 import {
   IconBuildingCommunity,
+  IconChartPie,
   IconBuildingEstate,
   IconCalendarDollar,
   IconCreditCard,
@@ -65,6 +66,7 @@ export const NAVIGATION: NavSection[] = [
     title: "Plateforme Dahoo",
     platformOnly: true,
     items: [
+      { label: "Vue d'ensemble", href: "/plateforme", icon: IconChartPie },
       { label: "Agences clientes", href: "/plateforme/agences", icon: IconBuildingCommunity },
       { label: "Demandes de démo", href: "/plateforme/demandes", icon: IconInbox },
     ],

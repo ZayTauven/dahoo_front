@@ -1,12 +1,13 @@
 "use client";
 
-import { IconArrowsMaximize, IconChevronLeft, IconChevronRight, IconPhoto, IconX } from "@tabler/icons-react";
+import { IconArrowsMaximize, IconChevronLeft, IconChevronRight, IconX } from "@tabler/icons-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import type { Swiper as SwiperInstance } from "swiper";
 import { A11y, Keyboard, Navigation, Thumbs } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
+import { RevealImage } from "@/components/site/motion";
 import { cn } from "@/lib/utils";
 
 import "swiper/css";
@@ -30,51 +31,50 @@ const A11Y_MESSAGES = {
 };
 
 const NAV_BUTTON =
-  "absolute top-1/2 z-10 flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-0 shadow-md transition-opacity disabled:cursor-default disabled:opacity-0";
+  "bg-surface-solid text-text-strong hover:bg-accent hover:text-on-accent absolute top-1/2 z-10 flex size-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-0 transition-[background-color,color,opacity] duration-300 disabled:cursor-default disabled:opacity-0";
+
+/** Nombre de photos montrées dans la mosaïque ; les suivantes s'ouvrent dans la visionneuse. */
+const MOSAIC_SIZE = 3;
 
 /** Swiper actif (non détruit) ou `null` : forme attendue par l'option `thumbs.swiper`. */
 function alive(swiper: SwiperInstance | null): SwiperInstance | null {
   return swiper && !swiper.destroyed ? swiper : null;
 }
 
+const pad = (value: number) => String(value).padStart(2, "0");
+
 /**
- * Galerie de la fiche : grande photo en carrousel + vignettes, et visionneuse plein écran
- * (<dialog> modal natif : focus piégé, Échap pour fermer). Navigation clavier par les flèches.
+ * Galerie de la fiche, en mosaïque éditoriale : une grande photo, et jusqu'à deux autres en colonne.
+ * Chaque photo ouvre la visionneuse plein écran (<dialog> modal natif : focus piégé, Échap pour
+ * fermer, flèches du clavier), qui montre toutes les photos.
  */
 export function ListingGallery({ photos, title }: { photos: GalleryPhoto[]; title: string }) {
-  const [active, setActive] = useState(0);
-  const [main, setMain] = useState<SwiperInstance | null>(null);
-  const [thumbs, setThumbs] = useState<SwiperInstance | null>(null);
-  const [prevEl, setPrevEl] = useState<HTMLButtonElement | null>(null);
-  const [nextEl, setNextEl] = useState<HTMLButtonElement | null>(null);
-
   const [open, setOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
-  // Visionneuse ouverte : page figée et flèches du clavier réservées au carrousel plein écran.
+  // Visionneuse ouverte : page figée.
   useEffect(() => {
     if (!open) return;
     const root = document.documentElement;
     const previousOverflow = root.style.overflow;
     root.style.overflow = "hidden";
-    main?.keyboard?.disable();
     return () => {
       root.style.overflow = previousOverflow;
-      main?.keyboard?.enable();
     };
-  }, [open, main]);
+  }, [open]);
 
   if (photos.length === 0) {
     return (
-      <div className="bg-surface-subtle text-text-muted flex aspect-[16/9] flex-col items-center justify-center gap-3 rounded-xl sm:aspect-[21/9]">
-        <IconPhoto size={44} stroke={1.25} aria-hidden="true" />
-        <p className="m-0 text-sm">Aucune photo n&apos;est encore disponible pour ce bien.</p>
+      <div className="border-border-strong text-text-muted flex aspect-[4/3] flex-col items-center justify-center gap-4 rounded-md border bg-[repeating-linear-gradient(135deg,transparent_0_14px,var(--ax-border)_14px_15px)] p-8 text-center sm:aspect-[21/9]">
+        <p className="font-display text-text-strong m-0 text-4xl italic sm:text-5xl">Photos à venir</p>
+        <p className="site-label m-0">Aucune photo n&apos;est encore disponible pour ce bien.</p>
       </div>
     );
   }
 
-  const several = photos.length > 1;
+  const shown = photos.slice(0, MOSAIC_SIZE);
+  const hidden = photos.length - shown.length;
 
   function openViewer(index: number) {
     setViewerIndex(index);
@@ -82,120 +82,75 @@ export function ListingGallery({ photos, title }: { photos: GalleryPhoto[]; titl
     dialogRef.current?.showModal();
   }
 
-  function onViewerClosed() {
-    setOpen(false);
-    main?.slideTo(viewerIndex, 0);
-  }
-
   return (
-    <div className="flex flex-col gap-3">
-      <div className="relative">
-        <Swiper
-          modules={[Navigation, Thumbs, Keyboard, A11y]}
-          onSwiper={setMain}
-          onSlideChange={(swiper) => setActive(swiper.activeIndex)}
-          navigation={{ prevEl, nextEl, addIcons: false }}
-          thumbs={{ swiper: alive(thumbs) }}
-          keyboard={{ enabled: true, onlyInViewport: true }}
-          a11y={A11Y_MESSAGES}
-          spaceBetween={12}
-          className="overflow-hidden rounded-xl"
-        >
-          {photos.map((photo, index) => (
-            <SwiperSlide key={photo.url}>
+    <div className="relative">
+      <ul
+        className={cn(
+          "m-0 grid list-none gap-3 p-0 sm:gap-4",
+          shown.length > 1 && "grid-cols-2 lg:h-[min(44rem,78vh)] lg:grid-cols-12",
+          shown.length === 3 && "lg:grid-rows-2",
+        )}
+      >
+        {shown.map((photo, index) => {
+          const lead = index === 0;
+          const last = index === shown.length - 1;
+          return (
+            <li
+              key={photo.url}
+              className={cn(
+                "relative min-w-0",
+                shown.length === 1 && "aspect-[4/3] sm:aspect-video lg:aspect-[21/9]",
+                shown.length > 1 && lead && "col-span-2 aspect-[4/3] lg:col-span-8 lg:aspect-auto",
+                shown.length === 3 && lead && "lg:row-span-2",
+                shown.length === 2 && !lead && "col-span-2 aspect-[4/3] lg:col-span-4 lg:aspect-auto",
+                shown.length === 3 && !lead && "aspect-square lg:col-span-4 lg:aspect-auto",
+              )}
+            >
               <button
                 type="button"
                 onClick={() => openViewer(index)}
-                className="bg-surface-subtle relative block aspect-[4/3] w-full cursor-zoom-in border-0 p-0 sm:aspect-[16/9]"
                 aria-label={`Agrandir la photo ${index + 1} sur ${photos.length}`}
+                className="group bg-surface-subtle focus-visible:outline-text-strong relative block h-full w-full cursor-zoom-in overflow-hidden rounded-md border-0 p-0 focus-visible:outline-2 focus-visible:outline-offset-4"
               >
-                <Image
-                  src={photo.url}
-                  alt={photo.alt}
-                  fill
-                  preload={index === 0}
-                  sizes="(min-width: 1200px) 1168px, 100vw"
-                  className="object-cover"
-                />
-              </button>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-
-        {several && (
-          <>
-            <button
-              ref={setPrevEl}
-              type="button"
-              aria-label="Photo précédente"
-              className={cn(NAV_BUTTON, "bg-surface-raised text-text-strong left-3")}
-            >
-              <IconChevronLeft size={22} stroke={2} aria-hidden="true" />
-            </button>
-            <button
-              ref={setNextEl}
-              type="button"
-              aria-label="Photo suivante"
-              className={cn(NAV_BUTTON, "bg-surface-raised text-text-strong right-3")}
-            >
-              <IconChevronRight size={22} stroke={2} aria-hidden="true" />
-            </button>
-          </>
-        )}
-
-        <div className="pointer-events-none absolute right-3 bottom-3 left-3 z-10 flex items-end justify-between gap-2">
-          <span className="bg-brand-900/80 ax-num rounded-full px-3 py-1 text-xs font-semibold text-white" aria-hidden="true">
-            {active + 1} / {photos.length}
-          </span>
-          <button
-            type="button"
-            onClick={() => openViewer(active)}
-            className="bg-brand-900/80 hover:bg-brand-900 pointer-events-auto flex cursor-pointer items-center gap-1.5 rounded-full border-0 px-3 py-1.5 text-xs font-semibold text-white"
-          >
-            <IconArrowsMaximize size={16} stroke={2} aria-hidden="true" />
-            Plein écran
-          </button>
-        </div>
-      </div>
-
-      {several && (
-        <Swiper
-          modules={[Thumbs, A11y]}
-          onSwiper={setThumbs}
-          watchSlidesProgress
-          slidesPerView={3.5}
-          spaceBetween={8}
-          breakpoints={{ 576: { slidesPerView: 5 }, 992: { slidesPerView: 7 } }}
-          a11y={{ ...A11Y_MESSAGES, containerMessage: "Vignettes des photos" }}
-          className="w-full"
-        >
-          {photos.map((photo, index) => (
-            <SwiperSlide
-              key={photo.url}
-              className="opacity-60 transition-opacity [&.swiper-slide-thumb-active]:opacity-100"
-            >
-              <button
-                type="button"
-                onClick={() => main?.slideTo(index)}
-                aria-label={`Afficher la photo ${index + 1}`}
-                aria-current={active === index ? "true" : undefined}
-                className={cn(
-                  "bg-surface-subtle relative block aspect-[4/3] w-full cursor-pointer overflow-hidden rounded-md border-2 p-0",
-                  active === index ? "border-accent" : "border-transparent",
+                <RevealImage delay={index * 0.12} className="h-full w-full rounded-md">
+                  <Image
+                    src={photo.url}
+                    alt={photo.alt}
+                    fill
+                    preload={lead}
+                    sizes={lead ? "(min-width: 1360px) 840px, (min-width: 992px) 62vw, 100vw" : "(min-width: 992px) 420px, 50vw"}
+                    className="object-cover transition-transform duration-[1.4s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04]"
+                  />
+                </RevealImage>
+                {last && hidden > 0 && (
+                  <span
+                    aria-hidden="true"
+                    className="bg-text-strong/55 text-canvas absolute inset-0 flex items-center justify-center rounded-md"
+                  >
+                    <span className="font-display text-5xl leading-none sm:text-6xl">+{hidden}</span>
+                  </span>
                 )}
-              >
-                <Image src={photo.url} alt="" fill sizes="160px" className="object-cover" />
               </button>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      )}
+              {lead && (
+                <button
+                  type="button"
+                  onClick={() => openViewer(0)}
+                  className="site-label bg-surface-solid text-text-strong hover:bg-accent hover:text-on-accent absolute bottom-4 left-4 z-10 flex h-10 cursor-pointer items-center gap-2.5 rounded-full border-0 px-4 transition-colors duration-300"
+                >
+                  <IconArrowsMaximize size={15} stroke={1.75} aria-hidden="true" />
+                  {photos.length > 1 ? `Voir les ${pad(photos.length)} photos` : "Plein écran"}
+                </button>
+              )}
+            </li>
+          );
+        })}
+      </ul>
 
       <dialog
         ref={dialogRef}
-        onClose={onViewerClosed}
+        onClose={() => setOpen(false)}
         aria-label={`Photos : ${title}`}
-        className="bg-brand-900 m-0 h-dvh max-h-none w-screen max-w-none border-0 p-0 text-white backdrop:bg-transparent"
+        className="site-dark m-0 h-dvh max-h-none w-screen max-w-none border-0 p-0 backdrop:bg-transparent"
       >
         {open && (
           <FullscreenViewer
@@ -229,19 +184,25 @@ function FullscreenViewer({
   const several = photos.length > 1;
 
   return (
-    <div className="flex h-full flex-col gap-3 p-3 sm:p-5">
+    <div className="flex h-full flex-col gap-4 p-4 sm:p-6">
       <div className="flex items-center justify-between gap-3">
-        <p className="ax-num m-0 text-sm font-semibold text-white/85" aria-live="polite">
-          Photo {index + 1} sur {photos.length}
+        <p className="site-label text-text-muted m-0" aria-live="polite">
+          <span className="sr-only">
+            Photo {index + 1} sur {photos.length}
+          </span>
+          <span aria-hidden="true">
+            <span className="text-text-strong">{pad(index + 1)}</span> / {pad(photos.length)}
+          </span>
         </p>
         <button
           type="button"
           onClick={onClose}
           autoFocus
-          aria-label="Fermer la galerie"
-          className="flex size-11 cursor-pointer items-center justify-center rounded-full border-0 bg-white/10 text-white hover:bg-white/20"
+          className="site-label text-text-strong hover:bg-accent hover:text-on-accent border-border-strong flex h-11 cursor-pointer items-center gap-2 rounded-full border bg-transparent px-4 transition-colors duration-300 hover:border-transparent"
         >
-          <IconX size={22} stroke={2} aria-hidden="true" />
+          Fermer
+          <IconX size={16} stroke={1.75} aria-hidden="true" />
+          <span className="sr-only"> la galerie</span>
         </button>
       </div>
 
@@ -270,21 +231,11 @@ function FullscreenViewer({
         </Swiper>
         {several && (
           <>
-            <button
-              ref={setPrevEl}
-              type="button"
-              aria-label="Photo précédente"
-              className={cn(NAV_BUTTON, "text-brand-900 left-1 bg-white sm:left-3")}
-            >
-              <IconChevronLeft size={22} stroke={2} aria-hidden="true" />
+            <button ref={setPrevEl} type="button" aria-label="Photo précédente" className={cn(NAV_BUTTON, "left-1 sm:left-3")}>
+              <IconChevronLeft size={22} stroke={1.75} aria-hidden="true" />
             </button>
-            <button
-              ref={setNextEl}
-              type="button"
-              aria-label="Photo suivante"
-              className={cn(NAV_BUTTON, "text-brand-900 right-1 bg-white sm:right-3")}
-            >
-              <IconChevronRight size={22} stroke={2} aria-hidden="true" />
+            <button ref={setNextEl} type="button" aria-label="Photo suivante" className={cn(NAV_BUTTON, "right-1 sm:right-3")}>
+              <IconChevronRight size={22} stroke={1.75} aria-hidden="true" />
             </button>
           </>
         )}
@@ -303,11 +254,11 @@ function FullscreenViewer({
           {photos.map((photo, thumbIndex) => (
             <SwiperSlide
               key={photo.url}
-              className="cursor-pointer opacity-50 transition-opacity [&.swiper-slide-thumb-active]:opacity-100"
+              className="cursor-pointer opacity-45 transition-opacity [&.swiper-slide-thumb-active]:opacity-100"
             >
               <span
                 className={cn(
-                  "relative block aspect-[4/3] overflow-hidden rounded-md border-2",
+                  "relative block aspect-[4/3] overflow-hidden rounded-sm border",
                   thumbIndex === index ? "border-accent" : "border-transparent",
                 )}
               >

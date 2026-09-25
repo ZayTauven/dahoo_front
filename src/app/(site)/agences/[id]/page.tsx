@@ -1,21 +1,29 @@
-import { IconHomeSearch, IconMail, IconMapPin, IconPhone } from "@tabler/icons-react";
+import { IconArrowDown, IconPhone } from "@tabler/icons-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Container, Section } from "@/components/site/layout";
-import { Highlight, Reveal } from "@/components/site/motion";
+import { Highlight, Reveal, RevealLines } from "@/components/site/motion";
+import { Breadcrumbs } from "@/components/site/PageHero";
+import { Pagination } from "@/components/site/Pagination";
 import { PropertyCard } from "@/components/site/PropertyCard";
-import { SectionHeading } from "@/components/site/SectionHeading";
+import { Eyebrow, SectionHeading } from "@/components/site/SectionHeading";
 import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 import { countLabel, formatPhone, pageParam, telHref } from "../_components/agency";
 import { AgencyCta } from "../_components/AgencyCta";
-import { AgencyMonogram } from "../_components/AgencyMonogram";
-import { getAgency, getAgencyListings, LISTINGS_PAGE_SIZE, type ListingTypeFilter } from "../_components/data";
-import { PageBanner } from "../_components/PageBanner";
-import { Pagination } from "../_components/Pagination";
+import { AgencyGallery, GALLERY_PHOTOS } from "../_components/AgencyGallery";
+import { AgencyMark } from "../_components/AgencyMonogram";
+import {
+  getAgency,
+  getAgencyListings,
+  getAgencyShowcase,
+  LISTINGS_PAGE_SIZE,
+  type ListingTypeFilter,
+} from "../_components/data";
+import { Notice } from "../_components/Notice";
 
 type Params = Promise<{ id: string }>;
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -62,7 +70,10 @@ export default async function AgencyPage({ params, searchParams }: { params: Par
   if (agency === "not-found") notFound();
   if (agency === null) throw new Error("API publique indisponible : fiche d'agence non chargée.");
 
-  const listings = await getAgencyListings(id, page, listingType);
+  const [listings, showcase] = await Promise.all([
+    getAgencyListings(id, page, listingType),
+    getAgencyShowcase(id, GALLERY_PHOTOS),
+  ]);
   const pageCount = listings && listings !== "page-not-found" ? Math.max(1, Math.ceil(listings.count / LISTINGS_PAGE_SIZE)) : 1;
 
   const hrefFor = (target: number, type: ListingTypeFilter | undefined = listingType) => {
@@ -79,111 +90,106 @@ export default async function AgencyPage({ params, searchParams }: { params: Par
     { label: "Annonces publiées", value: agency.listings_count },
   ];
 
+  const place = [agency.address, agency.city].filter(Boolean).join(", ");
+  const contacts: { label: string; value: string; href?: string }[] = [
+    ...(place ? [{ label: agency.address ? "Adresse" : "Ville", value: place }] : []),
+    ...(agency.phone ? [{ label: "Téléphone", value: formatPhone(agency.phone), href: telHref(agency.phone) }] : []),
+    ...(agency.email ? [{ label: "E-mail", value: agency.email, href: `mailto:${agency.email}` }] : []),
+  ];
+
   return (
     <>
-      <PageBanner
-        eyebrow={agency.city ? `Agence immobilière · ${agency.city}` : "Agence immobilière"}
-        title={agency.name}
-        crumbs={[{ label: "Agences", href: "/agences" }, { label: agency.name }]}
-        image="/images/site/slider-03.webp"
-      />
+      <div className="pt-8 pb-12 sm:pt-10 sm:pb-16">
+        <Container>
+          <Breadcrumbs crumbs={[{ label: "Agences", href: "/agences" }, { label: agency.name }]} />
 
-      <Section tone="subtle" labelledBy="coordonnees">
-        <Container className="grid items-center gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-16">
-          <Reveal className="border-border-default relative flex aspect-[495/420] w-full items-center justify-center overflow-hidden rounded-2xl border bg-[var(--ax-surface-solid)] shadow-card">
-            <span aria-hidden="true" className="bg-accent-wash absolute -top-16 -left-16 size-56 rounded-full" />
-            <span aria-hidden="true" className="bg-brand-600/10 absolute -right-12 -bottom-20 size-64 rounded-full" />
-            <AgencyMonogram id={agency.id} name={agency.name} className="relative size-36 text-5xl shadow-lg sm:size-44 sm:text-6xl" />
-            <span className="bg-accent text-on-accent absolute top-5 right-5 rounded-full px-3 py-1.5 text-xs font-bold">
-              Agence partenaire Dahoo
-            </span>
-          </Reveal>
-
-          <Reveal delay={0.1} className="flex flex-col gap-6">
-            <SectionHeading
-              id="coordonnees"
-              title={
-                <>
-                  Contacter <Highlight>l&apos;agence</Highlight>
-                </>
-              }
-            >
-              <p className="m-0">
-                {agency.name} publie ses biens sur Dahoo. Pour une visite ou une question sur un bien, contactez
-                l&apos;agence directement ou faites votre demande depuis l&apos;annonce qui vous intéresse.
-              </p>
-            </SectionHeading>
-
-            <dl className="m-0 grid grid-cols-3 gap-3">
+          {/* En-tête : logo (ou monogramme), nom et compteurs réels, puis la mosaïque de ses biens. */}
+          <div className="mt-8 grid gap-6 sm:mt-10 lg:grid-cols-12 lg:items-end lg:gap-8">
+            <div className="flex items-center gap-5 sm:gap-7 lg:col-span-8">
+              <AgencyMark
+                name={agency.name}
+                logo={agency.logo}
+                sizes="112px"
+                className="size-18 text-[1.9rem] sm:size-28 sm:text-[3rem]"
+              />
+              <div className="flex min-w-0 flex-col gap-3 sm:gap-4">
+                <Eyebrow>{agency.city ? `Agence partenaire · ${agency.city}` : "Agence partenaire"}</Eyebrow>
+                <h1 className="font-display text-text-strong m-0 text-[2.5rem] leading-[0.95] font-normal tracking-[-0.03em] text-balance sm:text-6xl lg:text-7xl">
+                  <RevealLines play="mount" delay={0.1} lines={[agency.name]} />
+                </h1>
+              </div>
+            </div>
+            <dl className="m-0 grid grid-cols-3 gap-4 lg:col-span-4">
               {counts.map((item) => (
-                <div key={item.label} className="border-border-default flex flex-col gap-1 rounded-xl border bg-[var(--ax-surface-solid)] p-4">
-                  <dt className="text-text-muted order-2 text-xs leading-snug font-medium sm:text-sm">{item.label}</dt>
-                  <dd className="font-display text-text-strong order-1 m-0 text-2xl font-bold sm:text-3xl">{formatNumber(item.value)}</dd>
+                <div key={item.label} className="border-border-default flex flex-col gap-2 border-t pt-3">
+                  <dt className="site-label text-text-muted order-2">{item.label}</dt>
+                  <dd className="font-display text-text-strong order-1 m-0 text-4xl leading-none tracking-[-0.03em] sm:text-5xl">
+                    {formatNumber(item.value)}
+                  </dd>
                 </div>
               ))}
             </dl>
+          </div>
 
-            <ul className="border-border-default m-0 flex list-none flex-col gap-4 border-t p-0 pt-6">
-              {(agency.address || agency.city) && (
-                <li className="flex items-start gap-3">
-                  <span className="bg-surface text-brand border-border-default inline-flex size-10 shrink-0 items-center justify-center rounded-full border">
-                    <IconMapPin size={18} stroke={1.75} aria-hidden="true" />
-                  </span>
-                  <span className="flex flex-col">
-                    <span className="text-text-muted text-xs font-semibold tracking-wide uppercase">{agency.address ? "Adresse" : "Ville"}</span>
-                    <span className="text-text-strong">{[agency.address, agency.city].filter(Boolean).join(", ")}</span>
-                  </span>
-                </li>
-              )}
-              {agency.phone && (
-                <li className="flex items-start gap-3">
-                  <span className="bg-surface text-brand border-border-default inline-flex size-10 shrink-0 items-center justify-center rounded-full border">
-                    <IconPhone size={18} stroke={1.75} aria-hidden="true" />
-                  </span>
-                  <span className="flex flex-col">
-                    <span className="text-text-muted text-xs font-semibold tracking-wide uppercase">Téléphone</span>
-                    <a href={telHref(agency.phone)} className="text-link font-semibold">
-                      {formatPhone(agency.phone)}
-                    </a>
-                  </span>
-                </li>
-              )}
-              {agency.email && (
-                <li className="flex items-start gap-3">
-                  <span className="bg-surface text-brand border-border-default inline-flex size-10 shrink-0 items-center justify-center rounded-full border">
-                    <IconMail size={18} stroke={1.75} aria-hidden="true" />
-                  </span>
-                  <span className="flex min-w-0 flex-col">
-                    <span className="text-text-muted text-xs font-semibold tracking-wide uppercase">E-mail</span>
-                    <a href={`mailto:${agency.email}`} className="text-link font-semibold break-all">
-                      {agency.email}
-                    </a>
-                  </span>
-                </li>
-              )}
-            </ul>
+          <Reveal>
+            <AgencyGallery listings={showcase} className="mt-8 sm:mt-10" />
+          </Reveal>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
+          {/* Coordonnées compactes : liste à filets et bouton d'appel. */}
+          <section
+            aria-labelledby="coordonnees"
+            className="border-border-default mt-8 grid gap-6 border-t pt-6 sm:mt-10 lg:grid-cols-12 lg:items-start lg:gap-8"
+          >
+            <div className="flex flex-col gap-3 lg:col-span-3">
+              <Eyebrow index="01" as="h2" id="coordonnees">
+                Contacter l&apos;agence
+              </Eyebrow>
+              <p className="text-text-muted m-0 max-w-xs text-sm leading-relaxed">
+                Pour une visite, appelez-la ou écrivez-lui depuis l&apos;annonce qui vous intéresse.
+              </p>
+            </div>
+
+            {contacts.length > 0 && (
+              <dl className="order-3 m-0 grid gap-x-6 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,1.3fr)] lg:order-none lg:col-span-6">
+                {contacts.map((item) => (
+                  <div key={item.label} className="border-border-default flex flex-col gap-1.5 border-b py-3 sm:border-b-0 sm:py-0">
+                    <dt className="site-label text-text-muted">{item.label}</dt>
+                    <dd className="text-text-strong m-0 min-w-0 text-base [overflow-wrap:anywhere] sm:text-lg">
+                      {item.href ? (
+                        <a href={item.href} className="site-link text-inherit">
+                          {item.value}
+                        </a>
+                      ) : (
+                        item.value
+                      )}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+
+            {/* Sur mobile, le bouton d'appel remonte juste sous le titre de la section. */}
+            <div className="order-2 flex flex-wrap items-center gap-x-8 gap-y-4 lg:order-none lg:col-span-3 lg:flex-col lg:items-end">
               {agency.phone && (
                 <a href={telHref(agency.phone)} className="ax-btn ax-btn--primary ax-btn--lg">
-                  <IconPhone className="ax-btn__icon" stroke={2} aria-hidden="true" />
+                  <IconPhone className="ax-btn__icon" stroke={1.75} aria-hidden="true" />
                   <span className="ax-btn__label">Appeler l&apos;agence</span>
                 </a>
               )}
-              <Link href="#annonces" className="ax-btn ax-btn--secondary ax-btn--lg">
-                <IconHomeSearch className="ax-btn__icon" stroke={2} aria-hidden="true" />
-                <span className="ax-btn__label">Voir ses biens</span>
+              <Link href="#annonces" className="site-link text-text-strong inline-flex items-center gap-2 font-medium">
+                Voir ses biens <IconArrowDown size={18} stroke={1.75} aria-hidden="true" />
               </Link>
             </div>
-          </Reveal>
+          </section>
         </Container>
-      </Section>
+      </div>
 
-      <Section id="annonces" labelledBy="annonces-titre" className="scroll-mt-20">
-        <Container>
-          <Reveal className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+      <Section tone="subtle" id="annonces" labelledBy="annonces-titre" className="scroll-mt-20">
+        <Container className="flex flex-col gap-10 lg:gap-14">
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
             <SectionHeading
               id="annonces-titre"
+              index="02"
               eyebrow={countLabel(agency.listings_count, "annonce publiée", "annonces publiées")}
               title={
                 <>
@@ -191,8 +197,8 @@ export default async function AgencyPage({ params, searchParams }: { params: Par
                 </>
               }
             />
-            <nav aria-label="Filtrer les annonces de l'agence">
-              <ul className="bg-surface-subtle border-border-default m-0 inline-flex list-none gap-1 rounded-full border p-1">
+            <nav aria-label="Filtrer les annonces de l'agence" className="shrink-0">
+              <ul className="border-border-strong m-0 inline-flex list-none gap-1 rounded-full border p-1">
                 {FILTERS.map((filter) => {
                   const active = filter.value === listingType;
                   return (
@@ -201,8 +207,8 @@ export default async function AgencyPage({ params, searchParams }: { params: Par
                         href={hrefFor(1, filter.value)}
                         aria-current={active ? "page" : undefined}
                         className={cn(
-                          "inline-flex h-10 items-center rounded-full px-4 text-sm font-semibold no-underline transition-colors",
-                          active ? "bg-brand-600 text-white" : "text-text hover:text-brand",
+                          "inline-flex h-10 items-center rounded-full px-5 text-sm font-medium no-underline transition-colors duration-300",
+                          active ? "bg-text-strong text-canvas" : "text-text-strong hover:bg-(--ax-fill-hover)",
                         )}
                       >
                         {filter.label}
@@ -212,36 +218,57 @@ export default async function AgencyPage({ params, searchParams }: { params: Par
                 })}
               </ul>
             </nav>
-          </Reveal>
+          </div>
 
           {listings === null ? (
-            <div role="status" className="ax-alert ax-alert--warning mt-10">
-              <div className="ax-alert__content">
-                <p className="ax-alert__title">Annonces momentanément indisponibles</p>
-                <p className="ax-alert__message">Nous n&apos;arrivons pas à charger les biens de cette agence. Réessayez dans quelques instants.</p>
-              </div>
-            </div>
-          ) : listings === "page-not-found" || listings.results.length === 0 ? (
-            <div className="ax-empty mt-6">
-              <IconHomeSearch className="ax-empty__icon" stroke={1.5} aria-hidden="true" />
-              <p className="ax-empty__title">
-                {listings === "page-not-found" ? "Cette page n'existe pas" : "Aucun bien dans cette catégorie"}
+            <Notice
+              role="status"
+              title={
+                <>
+                  Annonces momentanément <Highlight>indisponibles</Highlight>
+                </>
+              }
+            >
+              <p className="m-0">
+                Nous n&apos;arrivons pas à charger les biens de cette agence. Réessayez dans quelques instants.
               </p>
-              <Link href={hrefFor(1, undefined)} className="ax-btn ax-btn--secondary">
-                <span className="ax-btn__label">Voir toutes les annonces de l&apos;agence</span>
-              </Link>
-            </div>
+            </Notice>
+          ) : listings === "page-not-found" || listings.results.length === 0 ? (
+            <Notice
+              title={listings === "page-not-found" ? "Cette page n'existe pas" : "Aucun bien dans cette catégorie"}
+              action={
+                <Link href={hrefFor(1, undefined)} className="ax-btn ax-btn--secondary ax-btn--lg">
+                  <span className="ax-btn__label">Voir toutes les annonces de l&apos;agence</span>
+                </Link>
+              }
+            >
+              {listings !== "page-not-found" && (
+                <p className="m-0">
+                  Les annonces de {agency.name} sont mises à jour depuis son logiciel de gestion : revenez bientôt, ou
+                  contactez l&apos;agence pour connaître ses biens disponibles.
+                </p>
+              )}
+            </Notice>
           ) : (
-            <>
-              <ul className="m-0 mt-10 grid list-none gap-6 p-0 sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+              {/* Mobile : ruban à faire glisser ; tablette et bureau : grille. */}
+              <ul
+                aria-label={`Annonces de ${agency.name}`}
+                className="-mx-5 my-0 flex list-none snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-5 px-5 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:gap-x-8 sm:gap-y-14 sm:overflow-visible sm:p-0 lg:grid-cols-3"
+              >
                 {listings.results.map((listing, index) => (
-                  <Reveal as="li" key={listing.id} delay={Math.min(index, 5) * 0.06}>
+                  <Reveal as="li" key={listing.id} delay={(index % 3) * 0.08} className="w-[78vw] shrink-0 snap-start sm:w-auto">
                     <PropertyCard listing={listing} />
                   </Reveal>
                 ))}
               </ul>
-              <Pagination page={page} pageCount={pageCount} hrefFor={(target) => hrefFor(target)} label="Pages des annonces de l'agence" />
-            </>
+              <Pagination
+                page={page}
+                pageCount={pageCount}
+                hrefFor={(target) => hrefFor(target)}
+                label="Pages des annonces de l'agence"
+              />
+            </div>
           )}
         </Container>
       </Section>
